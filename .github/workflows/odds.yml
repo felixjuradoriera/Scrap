@@ -3,7 +3,7 @@ name: Odds Checker
 # Se ejecuta cada 30 minutos y se puede lanzar manualmente
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
