@@ -26,8 +26,11 @@ public class Prueba {
     // 🔹 Configuración correo
     private static final String SMTP_HOST = "smtp.gmail.com";
     private static final int SMTP_PORT = 587;
-    private static final String SMTP_USER = "felixjuradoriera@gmail.com";   // <-- tu Gmail
-    private static final String SMTP_PASS = "tsqa youa wqef cibh";       // <-- App Password de Gmail
+    //private static final String SMTP_USER = "felixjuradoriera@gmail.com";   // <-- tu Gmail
+    //private static final String SMTP_PASS = "tsqa youa wqef cibh";       // <-- App Password de Gmail
+    
+    private static final String SMTP_USER = System.getenv("SMTP_USER");
+    private static final String SMTP_PASS = System.getenv("SMTP_PASS");
 
     private static final String EMAIL_TO = "felixjuradoriera@gmail.com";
     private static final String EMAIL_SUBJECT = "Resultados Odds (Java)";
