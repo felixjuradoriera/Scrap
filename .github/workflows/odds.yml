@@ -1,30 +1,35 @@
 name: Odds Checker
 
+# Se ejecuta cada 30 minutos y se puede lanzar manualmente
 on:
   schedule:
-    - cron: "*/5 * * * *"   # 🔹 cada 5 minutos
-  workflow_dispatch:          # 🔹 para lanzarlo manualmente
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-and-run:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      # 1️⃣ Clonar el repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2️⃣ Configurar Java 17 y cache de Maven
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
           distribution: 'temurin'
+          java-version: '17'
           cache: maven
 
-      - name: Build with Maven
-        run: mvn -B package
+      # 3️⃣ Build con Maven (descarga dependencias y compila)
+      - name: Build project
+        run: mvn clean compile
 
-      - name: Run program
+      # 4️⃣ Ejecutar la clase Prueba con Maven exec
+      - name: Run Odds Checker
         env:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-        run: java -cp target/Scrapp-0.0.1-SNAPSHOT.jar Prueba
+        run: mvn exec:java -Dexec.mainClass="Prueba"
