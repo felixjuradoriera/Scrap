@@ -27,4 +27,4 @@ jobs:
         env:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-        run: java -cp target/odds-checker-1.0-SNAPSHOT.jar Prueba
+        run: java -cp target/Scrapp-0.0.1-SNAPSHOT.jar Prueba
