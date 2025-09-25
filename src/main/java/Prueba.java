@@ -327,6 +327,7 @@ public class Prueba {
     	filtroPaises.add("Estados Unidos");
     	filtroPaises.add("México");
     	filtroPaises.add("Mexico");
+    	filtroPaises.add("Bolivia");
     	
     	   	
     	if(filtroPaises.contains(odd.getCountry())) {
