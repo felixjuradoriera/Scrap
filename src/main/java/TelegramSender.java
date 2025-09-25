@@ -17,7 +17,10 @@ public class TelegramSender {
    private static final String[] CHAT_IDS = {"-1003064907759"};
     
     
-    private static final String[] CHAT_IDS_DEBUG = {"403482161"};
+    //private static final String[] CHAT_IDS_DEBUG = {"403482161"};
+    private static final String[] CHAT_IDS_DEBUG = {"-4914584937"};
+    
+    
 
     public static void sendTelegramMessage(String text) {
     	 for (String chatId : CHAT_IDS) {
