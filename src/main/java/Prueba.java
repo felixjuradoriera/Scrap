@@ -67,7 +67,8 @@ public class Prueba {
 
     private static final String CSV_FILE = "oddsAnteriores.csv";
     
-    static ArrayList<String> filtroBookies2UP= new ArrayList<String>(Arrays.asList("2","75","48","7","39","69","47"));
+    static ArrayList<String> filtroBookies2UP= new ArrayList<String>(Arrays.asList("2","48","7","39","69"));
+    static ArrayList<String> filtroBookies2UP2WAY= new ArrayList<String>(Arrays.asList("2","75","48","7","39","69","47"));
     static ArrayList<String> filtroBookiesVacio = new ArrayList<>();
     static ArrayList<String> filtroApuestas2UP= new ArrayList<String>(Arrays.asList("home","away"));
     static ArrayList<String> filtroApuestasHome= new ArrayList<String>(Arrays.asList("home"));
@@ -722,7 +723,7 @@ public class Prueba {
 		
 		ArrayList<Odd> lectura = new ArrayList<>();
 		
-		String urlParameters=crearUrlFiltroPeticionData(uid, filtroBookies2UP, "1", "1", filtroApuestasHome, codigosEventos);
+		String urlParameters=crearUrlFiltroPeticionData(uid, filtroBookies2UP2WAY, "1", "1", filtroApuestasHome, codigosEventos);
 		StringBuilder response= crearPeticionData(urlParameters, urlData);
     	lectura=mapearListaResultadosData(response);
     	lectura.sort(Comparator.comparingDouble(o -> Double.parseDouble(o.getBackOdd())));
@@ -776,7 +777,7 @@ public class Prueba {
 		}
 		
 		
-		urlParameters=crearUrlFiltroPeticionData(uid, filtroBookies2UP, "1", "1", filtroApuestasAway, codigosEventos);
+		urlParameters=crearUrlFiltroPeticionData(uid, filtroBookies2UP2WAY, "1", "1", filtroApuestasAway, codigosEventos);
 		response= crearPeticionData(urlParameters, urlData);
 		lectura=mapearListaResultadosData(response);
 		lectura.sort(Comparator.comparingDouble(o -> Double.parseDouble(o.getBackOdd())));
