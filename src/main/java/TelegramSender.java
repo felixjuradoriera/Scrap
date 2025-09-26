@@ -13,8 +13,8 @@ public class TelegramSender {
     
     
    // private static final String[] CHAT_IDS = {"403482161","-1003064907759"};
-  // private static final String[] CHAT_IDS = {"403482161"};
-   private static final String[] CHAT_IDS = {"-1003064907759"};
+   private static final String[] CHAT_IDS = {"403482161"};
+  // private static final String[] CHAT_IDS = {"-1003064907759"};
     
     //hola aqui
     //private static final String[] CHAT_IDS_DEBUG = {"403482161"};

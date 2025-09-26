@@ -98,8 +98,8 @@ public class Prueba {
                 
             // 🔹 Leer histórico si existe
             ArrayList<Odd> oddsAnteriores = leerCSV(CSV_FILE);
-            
-           
+            ArrayList<Odd> oddsGrabarCSV=new ArrayList<Odd>();
+                       
 			
                         
             //filtramos eventos que no interesan
@@ -107,15 +107,52 @@ public class Prueba {
             	 if (!yaExistia(odd, oddsAnteriores) && odd.getTimeInMin()<=FiltroMinutosAntiguedad  && pasaFiltroDatos(odd)) {
             		 
             		 //buscamos los mejores home,away y draw para cono información complementaria
-            		  odd=rellenaCuotas(odd); 		 
+            		 odd=rellenaCuotas(odd);
+            		 LocalDateTime ahora=LocalDateTime.now();
+            		 odd.setFechaAlerta(ahora);
             		 
             		 odds.add(odd);
+            		 oddsGrabarCSV.add(odd);
             	 } else {
+            		 
             		 System.out.println("ODD DESCARTADO:");
             		 System.out.println(odd.toString());
             		 System.out.println("TimeinMin: " + odd.getTimeInMin());
+            		          		 
+            		 
             	 }
             }
+                        
+            //añadimos al array grabarCSV las alertas remanentes que no se hayan renovado en esta lectura
+            for (Odd oddAnterior : oddsAnteriores) {
+            	boolean existe=false;
+            	for (Odd oddNuevo : odds) {
+            		if (oddNuevo.getEvent().equals(oddAnterior.getEvent())
+                            && oddNuevo.getBookie().equals(oddAnterior.getBookie())
+                            && oddNuevo.getSelection().equals(oddAnterior.getSelection())) {
+            			existe=true;
+            		}
+            	}
+				
+            	if(!existe) {
+            		// no existe. COmprobamos ultimo filtro de 18 minutos para saber si hay que añadirlo al CSV o no
+            		LocalDateTime ahora = LocalDateTime.now();
+            		LocalDateTime fechaAlerta = oddAnterior.getFechaAlerta();
+            		if (fechaAlerta.isBefore(ahora.minusMinutes(18))) {
+                        System.out.println("más de 18 minutos anterior. descartamos de Anteriores");
+                    } else {
+                        System.out.println("está dentro de los 18 minutos. COnservamos en Anteiriores");
+                        oddsGrabarCSV.add(oddAnterior);
+                    }
+            		
+            	}
+			}
+            
+            
+            
+            
+            
+            
             
             if(lectura.isEmpty()) {
             	StringBuilder mensajeDebug = new StringBuilder();
@@ -261,7 +298,7 @@ public class Prueba {
                     
             
             // 🔹 Guardar los odds actuales como histórico
-            escribirCSV(CSV_FILE, lectura);
+            escribirCSV(CSV_FILE, oddsGrabarCSV);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -344,8 +381,7 @@ public class Prueba {
     		System.out.println("Evento no pasa filtro rating/cuota --> " + odd.getRating() + "/" + odd.getBackOdd());
     		return false;
     	}
-    	   
-    	
+    	    	
     	return true;
     }
 
@@ -354,22 +390,41 @@ public class Prueba {
         for (Odd o : anteriores) {
             if (o.getEvent().equals(nuevo.getEvent())
                     && o.getBookie().equals(nuevo.getBookie())
-                    && o.getRating().equals(nuevo.getRating())
                     && o.getSelection().equals(nuevo.getSelection())) {
-                return true;
+            	
+            	if(o.getRating().equals(nuevo.getRating())) {
+            		return true;
+            	} else {
+            		
+            		Double ratingExistente=Double.valueOf(o.getRating());
+            		Double ratingNuevo=Double.valueOf(nuevo.getRating());
+            		
+            		if(ratingNuevo<ratingExistente) {
+            			//el nuevo rating es peor que el que ya habíamos lanzado anteriormente, devolvemos true para que se descarte la alerta
+            			return true;
+            		}
+            		            		
+            	}
+            	               
             }
+                    
         }
         return false;
     }
 
     // 🔹 Guardar odds en CSV
     private static void escribirCSV(String file, ArrayList<Odd> odds) {
+    	
+    	 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    	 
+    	
         try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
             for (Odd o : odds) {
+            	String fechaFormateada = o.getFechaAlerta().format(formatter);
                 pw.println(String.join(";",
                         o.getEvent(), o.getBookie(), o.getRating(), o.getBackOdd(),
                         o.getLayOdd(), o.getSelection(), o.getCompetition(),
-                        o.getUpdate_time(), o.getCountry(), o.getTimeInMin().toString()));
+                        o.getUpdate_time(), o.getCountry(), o.getTimeInMin().toString(), fechaFormateada));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -381,6 +436,8 @@ public class Prueba {
         ArrayList<Odd> lista = new ArrayList<>();
         File f = new File(file);
         if (!f.exists()) return lista;
+        
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
@@ -398,6 +455,8 @@ public class Prueba {
                     o.setUpdate_time(campos[7]);
                     o.setCountry(campos[8]);
                     o.setTimeInMin(Integer.valueOf(campos[9]));
+                    LocalDateTime fecha = LocalDateTime.parse(campos[10], formatter);
+                    o.setFechaAlerta(fecha);
                     lista.add(o);
                 }
             }
@@ -875,6 +934,8 @@ public class Prueba {
         
         String equipoHome="";
         String equipoAway="";
+        
+        private LocalDateTime fechaAlerta;
 
         // getters y setters
         public String getEvent() { return event; }
@@ -973,6 +1034,12 @@ public class Prueba {
 		}
 		public void setNivelAlerta(Integer nivelAlerta) {
 			this.nivelAlerta = nivelAlerta;
+		}
+		public LocalDateTime getFechaAlerta() {
+			return fechaAlerta;
+		}
+		public void setFechaAlerta(LocalDateTime fechaAlerta) {
+			this.fechaAlerta = fechaAlerta;
 		}
 	
 		
