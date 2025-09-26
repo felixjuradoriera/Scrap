@@ -13,6 +13,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,7 +28,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 
 import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
@@ -370,8 +370,7 @@ public class Prueba {
     	if(filtroPaises.contains(odd.getCountry())) {
     		System.out.println("Evento no pasa filtro pais --> " + odd.getCountry());
     		return false;
-    	}
-    	
+    	}    	
     	
     	//filtro rating
     	// Hay un primer filtro de rating en la búsqueda que es el mínimo aqui se contrastan cuotas con ratings
@@ -381,6 +380,20 @@ public class Prueba {
     		System.out.println("Evento no pasa filtro rating/cuota --> " + odd.getRating() + "/" + odd.getBackOdd());
     		return false;
     	}
+    	
+    	
+    	//filtro partido demasiado lejano
+    	LocalDateTime ahora = LocalDateTime.now();
+    	LocalDateTime fechaObjetivo=odd.getFechaPartido();
+    	long diferencia = ChronoUnit.DAYS.between(ahora, fechaObjetivo);
+
+        if (Math.abs(diferencia) <= 5) {
+            System.out.println("✅ La fecha está dentro de ±5 días de hoy");
+        } else {
+            System.out.println("❌ La fecha está fuera del rango de ±5 días");
+            return false;
+        }
+    	
     	    	
     	return true;
     }
