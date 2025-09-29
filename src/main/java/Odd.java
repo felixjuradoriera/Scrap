@@ -29,6 +29,7 @@ public class Odd {
         ArrayList<Odd> mejoresAway=new ArrayList<Odd>();
         
         Odd exchangeDraw;
+        ArrayList<Odd> oddsFusion;
         
         Integer nivelAlerta;
         
@@ -140,6 +141,12 @@ public class Odd {
 		}
 		public void setFechaAlerta(LocalDateTime fechaAlerta) {
 			this.fechaAlerta = fechaAlerta;
+		}
+		public ArrayList<Odd> getOddsFusion() {
+			return oddsFusion;
+		}
+		public void setOddsFusion(ArrayList<Odd> oddsFusion) {
+			this.oddsFusion = oddsFusion;
 		}
 	
 		

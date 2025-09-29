@@ -67,6 +67,7 @@ public class Prueba {
 
     private static final String CSV_FILE = "C:"+ File.separator +"BOT" + File.separator +"CONF"+File.separator+ "oddsAnteriores.csv";
     
+    
     static ArrayList<String> filtroBookies2UP= new ArrayList<String>(Arrays.asList("2","48","7","39","69"));
     static ArrayList<String> filtroBookies2UP2WAY= new ArrayList<String>(Arrays.asList("2","75","48","7","39","69","47"));
     static ArrayList<String> filtroBookiesVacio = new ArrayList<>();
@@ -93,9 +94,15 @@ public class Prueba {
         try {
         	
         	StringBuilder response= crearPeticionData(urlParameters, urlData);
+        	//StringBuilder response= DatosPruebasUtils.leerJsonDeArchivo();  //PARA PRUEBAS
+        	
+        	//DatosPruebasUtils.guardarJsonEnArchivo(response); //PARA PRUEBAS
+        	
         	
         	ArrayList<Odd> lectura = new ArrayList<>();
             ArrayList<Odd> odds = new ArrayList<>();
+            
+            
 
             lectura=mapearListaResultadosData(response);
             
@@ -214,6 +221,52 @@ public class Prueba {
             // 🔹 Enviar resultado por email
            // sendEmail(html.toString());
             
+           ArrayList<Odd> oddsFusionados=new ArrayList<Odd>();
+           for (Odd odd : odds) {
+			String market_id=odd.getMarket_id();
+			boolean encontrado=false;
+			for (Odd odd2 : oddsFusionados) {
+				if(odd2.getMarket_id().equals(market_id)) {
+					Odd o=new Odd();
+					o.setBookie(odd.getBookie());
+					o.setRating(odd.getRating());
+					o.setRatingOriginal(odd.getRatingOriginal());
+					o.setBackOdd(odd.getBackOdd());
+					o.setBackOddOriginal(odd.getBackOddOriginal());
+					o.setLayOdd(odd.getLayOdd());
+					o.setSelection(odd.getSelection());
+					o.setTimeInMin(odd.getTimeInMin());
+					o.setUpdate_time(odd.getUpdate_time());
+					
+					odd2.getOddsFusion().add(o);
+					encontrado=true;
+				}
+			}
+			
+			if(!encontrado) {
+				
+				Odd o=new Odd();
+				o.setBookie(odd.getBookie());
+				o.setRating(odd.getRating());
+				o.setRatingOriginal(odd.getRatingOriginal());
+				o.setBackOdd(odd.getBackOdd());
+				o.setBackOddOriginal(odd.getBackOddOriginal());
+				o.setLayOdd(odd.getLayOdd());
+				o.setSelection(odd.getSelection());
+				o.setTimeInMin(odd.getTimeInMin());
+				o.setUpdate_time(odd.getUpdate_time());
+				
+				ArrayList<Odd> oddsFusion=new ArrayList<Odd>();
+				oddsFusion.add(o);
+				odd.setOddsFusion(oddsFusion);
+				
+				oddsFusionados.add(odd);
+				
+			}
+        	   
+           }
+            
+            
             
          // 🔹 Generar mensaje de Telegram (resumen)
             StringBuilder mensaje = new StringBuilder();
@@ -228,8 +281,8 @@ public class Prueba {
 					}
 				}
 
-				for (Odd odd : odds) {
-
+				for (Odd odd : oddsFusionados) {
+					
 					if(!marketsExcluidos.contains(odd.getMarket_id())) {
 						// crear mensaje Alerta
 						mensaje = MessageUtils.createAlerta(odd);
