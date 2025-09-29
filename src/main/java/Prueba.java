@@ -65,7 +65,7 @@ public class Prueba {
     private static  String ratingInicial="92";
     private static  String cuotaMinima="2.5";
 
-    private static final String CSV_FILE = "oddsAnteriores.csv";
+    private static final String CSV_FILE = "C:"+ File.separator +"BOT" + File.separator +"CONF"+File.separator+ "oddsAnteriores.csv";
     
     static ArrayList<String> filtroBookies2UP= new ArrayList<String>(Arrays.asList("2","48","7","39","69"));
     static ArrayList<String> filtroBookies2UP2WAY= new ArrayList<String>(Arrays.asList("2","75","48","7","39","69","47"));
@@ -78,14 +78,19 @@ public class Prueba {
 
     public static void main(String[] args) {
         	
-    	    	
+    	//cargamos la lista de usuarios
+    	List<User> users=UsersUtils.readUsers();
+    	List<AlertaExclusion> exclusiones=new ArrayList<>();
+    	try {
+			exclusiones=AlertaExclusionCSVUtils.loadFromCSV();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         
         String urlParameters=crearUrlFiltroPeticionData(uid, filtroBookies2UP, ratingInicial, cuotaMinima, filtroApuestas2UP, "");
 
         try {
-        	
-        	
-          
         	
         	StringBuilder response= crearPeticionData(urlParameters, urlData);
         	
@@ -213,92 +218,42 @@ public class Prueba {
          // 🔹 Generar mensaje de Telegram (resumen)
             StringBuilder mensaje = new StringBuilder();
             
+			for (User user : users) {
 
-            for (Odd odd : odds) {
-            	mensaje = new StringBuilder();
-            	            	
-            		 if(odd.getNivelAlerta()==1) {
-            			 mensaje.append("‼️🔥🔥‼️").append("\n");
-            		 }
-            		 if(odd.getNivelAlerta()==2) {
-            			 mensaje.append("‼️‼️🔥🔥🔥🔥🔥🔥‼️‼️").append("\n");
-            		 }
-            		 mensaje.append("⚽ <b>").append(odd.getEvent()).append("</b>\n");
-            		 mensaje.append("🏆 <b>").append(odd.getCompetition()).append(" (").append(odd.getCountry()).append(")</b>\n");
-            		 mensaje.append("🗓️ <b>").append(odd.getsFechaPartido()).append("h").append("</b>\n\n");
-            		 
-            		 mensaje.append("🔔<u><b> 2UP SIMPLE </b></u>\n");
-            		 mensaje.append("    🏛 <b>").append(getNombreBookie(odd.getBookie())).append("</b>\n");
-            		 
-            		 if (odd.getBookie().equals("39")) {
-            			 mensaje.append("    📈 <b>").append(odd.getRating()).append("%</b> (").append(odd.getRatingOriginal()).append(")\n");
-            		 } else {
-            			 mensaje.append("    📈 <b>").append(odd.getRating()).append("%</b>\n");
-            		 }
-            		             		
-            		 mensaje.append("    Ap: <b>").append(odd.getSelection()).append("</b>\n");
-            		 
-            		 if (odd.getBookie().equals("39")) {
-            			 mensaje.append("    📋 Back: <b>").append(odd.getBackOdd()).append("</b> (").append(odd.getBackOddOriginal()).append(") | Lay: <b>").append(odd.getLayOdd()).append("</b>\n");	 
-            		 } else {
-            			 mensaje.append("    📋 Back: <b>").append(odd.getBackOdd()).append("</b> | Lay: <b>").append(odd.getLayOdd()).append("</b>\n"); 
-            	   		 }
-            	            		 
-            		mensaje.append("    ⏱ ").append(odd.getUpdate_time()).append("\n");
-            		mensaje.append("    🔗 <a href=\"https://www.betfair.es/exchange/football/market?id=").append(odd.getMarket_id()).append("\">Ver en Betfair</a>\n\n");
-            		 
-            		mensaje.append("🔔<u><b> 2WAY 2UP </b></u>\n");
-             		mensaje.append("🟢<b>").append(odd.getEquipoHome()).append("</b>\n");
-             		for (Odd o : odd.getMejoresHome()) {
-             			 if (o.getBookie().equals("39")) {
-             				mensaje.append("     ").append(getNombreBookie(o.getBookie())).append("->").append(o.getBackOdd()).append("(").append(o.getBackOddOriginal()).append(")").append("\n");	 
-             			 } else {
-             				mensaje.append("     ").append(getNombreBookie(o.getBookie())).append("->").append(o.getBackOdd()).append("\n"); 
-             			 }
-             		}
-             		
-             		
-             		mensaje.append("🟢<b>").append("Empate").append("</b>\n");
-             		for (Odd o : odd.getMejoresDraw()) {
-             			if (o.getBookie().equals("39") || o.getBookie().equals("2")) {
-             				mensaje.append("     ").append(getNombreBookie(o.getBookie())).append("->").append(o.getBackOdd()).append("(").append(o.getBackOddOriginal()).append(")").append("\n");	
-             			} else {
-             				mensaje.append("     ").append(getNombreBookie(o.getBookie())).append("->").append(o.getBackOdd()).append("\n");
-             			}
-             		}
-             		
-             		if(odd.getExchangeDraw()!=null) {
-             			mensaje.append("     ").append("Exchange BACK ->").append(odd.getExchangeDraw().getBackOdd()).append("(").append(odd.getExchangeDraw().getBackOddOriginal()).append(")\n");
-             			mensaje.append("       Liquidez:").append(odd.getExchangeDraw().getLayOdd()).append("€\n");
-             		}
-             		
-             		
-             		mensaje.append("🟢<b>").append(odd.getEquipoAway()).append("</b>\n");
-             		for (Odd o : odd.getMejoresAway()) {
-             			if (o.getBookie().equals("39")) {
-             				mensaje.append("     ").append(getNombreBookie(o.getBookie())).append("->").append(o.getBackOdd()).append("(").append(o.getBackOddOriginal()).append(")").append("\n");	
-             			} else {
-             				mensaje.append("     ").append(getNombreBookie(o.getBookie())).append("->").append(o.getBackOdd()).append("\n");
-             			}
-             		}
-             		
-             		 if(odd.getNivelAlerta()==1) {
-            			 mensaje.append("‼️🔥🔥‼️").append("\n");
-            		 }
-            		 if(odd.getNivelAlerta()==2) {
-            			 mensaje.append("‼️‼️🔥🔥🔥🔥🔥🔥‼️‼️").append("\n");
-            		 }
-            		 
-             	// 🔹 Enviar a Telegram
-             		TelegramSender.sendTelegramMessage(mensaje.toString());	
-               
-            }
+				//generamos el array de markets excluidos por el usuario
+				ArrayList<String> marketsExcluidos = new ArrayList<String>();
+				for (AlertaExclusion ex : exclusiones) {
+					if (user.getChatId().toString().equals(ex.getChatId().toString())) {
+						marketsExcluidos.add(ex.getMarket_id());
+					}
+				}
 
-            
-                    
+				for (Odd odd : odds) {
+
+					if(!marketsExcluidos.contains(odd.getMarket_id())) {
+						// crear mensaje Alerta
+						mensaje = MessageUtils.createAlerta(odd);
+						// 🔹 Enviar a Telegram
+						TelegramSender.sendTelegramMessageAlerta(mensaje.toString(), odd, user.getChatId().toString());
+					} else {
+						 System.out.println("evento excluido por el usuario " + user.getChatId() + " -->" + odd.getEvent());
+						 System.out.println("no lo enviamos");
+					}
+					
+					
+
+				}
+
+			}
+                            
             
             // 🔹 Guardar los odds actuales como histórico
             escribirCSV(CSV_FILE, oddsGrabarCSV);
+            
+            //borrar exclusiones de alertas cuyos eventos ya han pasado
+            List<AlertaExclusion> exclusionesFiltradas=AlertaExclusionCSVUtils.filtrarAlertasPosteriores(exclusiones);
+            AlertaExclusionCSVUtils.escribirAlertasEnCsv(exclusionesFiltradas);
+            
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -865,199 +820,8 @@ public class Prueba {
     }
     
 
-    private static String getNombreBookie(String bookie) {
-        Map<String, String> bookies = new HashMap<>();
-        bookies.put("68", "1xbet");
-        bookies.put("1", "888sport");
-        bookies.put("54", "Admiral");
-        bookies.put("108", "Aupabet");
-        bookies.put("2", "Bet365");
-        bookies.put("75", "Bet777");
-        bookies.put("53", "Betfairsportbook");
-        bookies.put("56", "Betsson");
-        bookies.put("59", "Betway");
-        bookies.put("7", "Bwin");
-        bookies.put("62", "Casino Barcelona");
-        bookies.put("61", "Casino Madrid");
-        bookies.put("41", "Casinogranvía");
-        bookies.put("106", "Casumo");
-        bookies.put("39", "Codere");
-        bookies.put("78", "Dafabet");
-        bookies.put("104", "Daznbet");
-        bookies.put("102", "Ebingo");
-        bookies.put("103", "Efbet");
-        bookies.put("73", "Enracha");
-        bookies.put("40", "Goldenpark");
-        bookies.put("43", "Interwetten");
-        bookies.put("42", "Jokerbet");
-        bookies.put("76", "Juegging");
-        bookies.put("64", "Kirolbet");
-        bookies.put("71", "Leovegas");
-        bookies.put("44", "Luckia");
-        bookies.put("55", "Marathonbet");
-        bookies.put("45", "Marcaapuestas");
-        bookies.put("107", "Olybet");
-        bookies.put("46", "Paf");
-        bookies.put("47", "Paston");
-        bookies.put("29", "Pokerstars");
-        bookies.put("57", "Retabet");
-        bookies.put("109", "Solcasino");
-        bookies.put("48", "Sportium");
-        bookies.put("105", "Tonybet");
-        bookies.put("65", "Versus");
-        bookies.put("20", "Williamhill");
-        bookies.put("69", "Winamax");
-        bookies.put("52", "Yaass");
-        bookies.put("74", "Zebet");
 
-        return bookies.getOrDefault(bookie, bookie);
-    }
-    
-    
-    
 
-    // 🔹 Clase Odd
-    public static class Odd {
-        private String event;
-        private String bookie;
-        private String rating;
-        private String backOdd;
-        private String layOdd;
-        private String selection;
-        private String competition;
-        private String update_time;
-        private String country;
-        private Integer timeInMin;
-        
-        private String backOddOriginal;
-        private String ratingOriginal;
-        
-        private LocalDateTime fechaPartido;
-        private String sFechaPartido;
-        
-        private String market_id;
-        
-        ArrayList<Odd> mejoresHome=new ArrayList<Odd>();
-        ArrayList<Odd> mejoresDraw=new ArrayList<Odd>();
-        ArrayList<Odd> mejoresAway=new ArrayList<Odd>();
-        
-        Odd exchangeDraw;
-        
-        Integer nivelAlerta;
-        
-        String equipoHome="";
-        String equipoAway="";
-        
-        private LocalDateTime fechaAlerta;
-
-        // getters y setters
-        public String getEvent() { return event; }
-        public void setEvent(String event) { this.event = event; }
-        public String getBookie() { return bookie; }
-        public void setBookie(String bookie) { this.bookie = bookie; }
-        public String getRating() { return rating; }
-        public void setRating(String rating) { this.rating = rating; }
-        public String getBackOdd() { return backOdd; }
-        public void setBackOdd(String backOdd) { this.backOdd = backOdd; }
-        public String getLayOdd() { return layOdd; }
-        public void setLayOdd(String layOdd) { this.layOdd = layOdd; }
-        public String getSelection() { return selection; }
-        public void setSelection(String selection) { this.selection = selection; }
-        public String getCompetition() { return competition; }
-        public void setCompetition(String competition) { this.competition = competition; }
-        public String getUpdate_time() { return update_time; }
-        public void setUpdate_time(String update_time) { this.update_time = update_time; }
-        public String getCountry() { return country; }
-        public void setCountry(String country) { this.country = country; }
-		public Integer getTimeInMin() {
-			return timeInMin;
-		}
-		public void setTimeInMin(Integer timeInMin) {
-			this.timeInMin = timeInMin;
-		}
-		public String getMarket_id() {
-			return market_id;
-		}
-		public void setMarket_id(String market_id) {
-			this.market_id = market_id;
-		}
-		public String getBackOddOriginal() {
-			return backOddOriginal;
-		}
-		public void setBackOddOriginal(String backOddOriginal) {
-			this.backOddOriginal = backOddOriginal;
-		}
-		public String getRatingOriginal() {
-			return ratingOriginal;
-		}
-		public void setRatingOriginal(String ratingOriginal) {
-			this.ratingOriginal = ratingOriginal;
-		}
-		public ArrayList<Odd> getMejoresHome() {
-			return mejoresHome;
-		}
-		public void setMejoresHome(ArrayList<Odd> mejoresHome) {
-			this.mejoresHome = mejoresHome;
-		}
-		public ArrayList<Odd> getMejoresDraw() {
-			return mejoresDraw;
-		}
-		public void setMejoresDraw(ArrayList<Odd> mejoresDraw) {
-			this.mejoresDraw = mejoresDraw;
-		}
-		public ArrayList<Odd> getMejoresAway() {
-			return mejoresAway;
-		}
-		public void setMejoresAway(ArrayList<Odd> mejoresAway) {
-			this.mejoresAway = mejoresAway;
-		}
-		public String getEquipoHome() {
-			return equipoHome;
-		}
-		public void setEquipoHome(String equipoHome) {
-			this.equipoHome = equipoHome;
-		}
-		public String getEquipoAway() {
-			return equipoAway;
-		}
-		public void setEquipoAway(String equipoAway) {
-			this.equipoAway = equipoAway;
-		}
-		
-		public String getsFechaPartido() {
-			return sFechaPartido;
-		}
-		public void setsFechaPartido(String sFechaPartido) {
-			this.sFechaPartido = sFechaPartido;
-		}
-		public LocalDateTime getFechaPartido() {
-			return fechaPartido;
-		}
-		public void setFechaPartido(LocalDateTime fechaPartido) {
-			this.fechaPartido = fechaPartido;
-		}
-		public Odd getExchangeDraw() {
-			return exchangeDraw;
-		}
-		public void setExchangeDraw(Odd exchangeDraw) {
-			this.exchangeDraw = exchangeDraw;
-		}
-		public Integer getNivelAlerta() {
-			return nivelAlerta;
-		}
-		public void setNivelAlerta(Integer nivelAlerta) {
-			this.nivelAlerta = nivelAlerta;
-		}
-		public LocalDateTime getFechaAlerta() {
-			return fechaAlerta;
-		}
-		public void setFechaAlerta(LocalDateTime fechaAlerta) {
-			this.fechaAlerta = fechaAlerta;
-		}
-	
-		
-        
-    }
     
     public static class Event {
         private String id;
