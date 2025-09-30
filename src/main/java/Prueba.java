@@ -546,7 +546,7 @@ public class Prueba {
     	
     	urlFiltro+="&min-liquidity=&sort-column=4&sort-direction=desc";
     	
-    	urlFiltro+="&offset=0&date-from=&date-to=&exchange=all&exchanges=all&sport=&betfair-commission=2&matchbook-commission=";
+    	urlFiltro+="&offset=0&date-from=&date-to=&exchange=all&exchanges=all&sport=[]1&betfair-commission=2&matchbook-commission=";
     	
     	String sFiltroTiposApuesta="";
     	for (String tipo : filtroApuestas) {
