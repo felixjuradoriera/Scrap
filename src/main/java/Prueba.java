@@ -380,20 +380,24 @@ public class Prueba {
     		return false;
     	}    	
     	
-    	//filtro rating
-    	// Hay un primer filtro de rating en la búsqueda que es el mínimo aqui se contrastan cuotas con ratings
+    	
     	Double rating=Double.valueOf(odd.getRating());
     	Double cuota=Double.valueOf(odd.getBackOdd());
-    	if(cuota<5 && rating<95) {
-    		System.out.println("Evento no pasa filtro rating/cuota --> " + odd.getRating() + "/" + odd.getBackOdd());
-    		return false;
-    	}
-    	    	
+    	
     	//filtro cuota demasiado Alta
     	if(cuota>10) {
     		System.out.println("Evento no pasa filtro cuota BACK demasiado alta --> " + odd.getRating() + "/" + odd.getBackOdd());
     		return false;
     	}
+    	
+    	//filtro rating
+    	// Hay un primer filtro de rating en la búsqueda que es el mínimo aqui se contrastan cuotas con ratings
+    	if(cuota<5 && rating<95) {
+    		System.out.println("Evento no pasa filtro rating/cuota --> " + odd.getRating() + "/" + odd.getBackOdd());
+    		return false;
+    	}
+    	    	
+    	
     	    	
     	
     	//filtro partido demasiado lejano
