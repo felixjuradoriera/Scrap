@@ -40,7 +40,7 @@ public class MessageUtils {
 			 mensaje.append("    Ap: <b>").append(odFusion.getSelection()).append("</b>\n");
 			 
 			 if (odFusion.getBookie().equals("39")) {
-				 mensaje.append("    📋 Back: <b>").append(odFusion.getBackOdd()).append("</b> (").append(odFusion).append(") | Lay: <b>").append(odFusion.getLayOdd()).append("</b>\n");	 
+				 mensaje.append("    📋 Back: <b>").append(odFusion.getBackOdd()).append("</b> (").append(odFusion.getBackOddOriginal()).append(") | Lay: <b>").append(odFusion.getLayOdd()).append("</b>\n");	 
 			 } else {
 				 mensaje.append("    📋 Back: <b>").append(odFusion.getBackOdd()).append("</b> | Lay: <b>").append(odFusion.getLayOdd()).append("</b>\n"); 
 		   		 }
