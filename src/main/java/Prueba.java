@@ -96,7 +96,7 @@ public class Prueba {
         	StringBuilder response= crearPeticionData(urlParameters, urlData);
         	//StringBuilder response= DatosPruebasUtils.leerJsonDeArchivo();  //PARA PRUEBAS
         	
-        	//DatosPruebasUtils.guardarJsonEnArchivo(response); //PARA PRUEBAS
+        	DatosPruebasUtils.guardarJsonEnArchivo(response); //PARA PRUEBAS
         	
         	
         	ArrayList<Odd> lectura = new ArrayList<>();
@@ -388,7 +388,13 @@ public class Prueba {
     		System.out.println("Evento no pasa filtro rating/cuota --> " + odd.getRating() + "/" + odd.getBackOdd());
     		return false;
     	}
-    	
+    	    	
+    	//filtro cuota demasiado Alta
+    	if(cuota>10) {
+    		System.out.println("Evento no pasa filtro cuota BACK demasiado alta --> " + odd.getRating() + "/" + odd.getBackOdd());
+    		return false;
+    	}
+    	    	
     	
     	//filtro partido demasiado lejano
     	LocalDateTime ahora = LocalDateTime.now();
@@ -546,7 +552,11 @@ public class Prueba {
     	
     	urlFiltro+="&min-liquidity=&sort-column=4&sort-direction=desc";
     	
-    	urlFiltro+="&offset=0&date-from=&date-to=&exchange=all&exchanges=all&sport=[]1&betfair-commission=2&matchbook-commission=";
+    	urlFiltro+="&offset=0&date-from=&date-to=&exchange=all&exchanges=all";
+    		
+    	urlFiltro+="&sport[]=1";
+    	
+    	urlFiltro+="&betfair-commission=2&matchbook-commission=";
     	
     	String sFiltroTiposApuesta="";
     	for (String tipo : filtroApuestas) {
