@@ -570,14 +570,12 @@ public class Prueba {
         mensajeDebug.append("<b>Debug Ejecucion</b>\n");
         
         if(responseCode!=200) {
-        	codeRespuesta=200;
-        	
+        	codeRespuesta=Integer.valueOf(code);
         	mensajeDebug.append("resultado Petición HTTP: <b>").append(code).append("</b>\n");
         	//mensajeDebug.append("⚽ <b>").append(code).append("</b>\n");
                          	
         } else {
-        	codeRespuesta=Integer.valueOf(code);
-        	
+        	codeRespuesta=200;
         	mensajeDebug.append("resultado Petición HTTP: <b>").append(code).append("</b>\n");
         	//mensajeDebug.append("⚽ <b>").append(code).append("</b>\n");
         }
