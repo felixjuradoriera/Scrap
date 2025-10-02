@@ -76,8 +76,7 @@ public class Prueba {
     static ArrayList<String> filtroApuestasDraw= new ArrayList<String>(Arrays.asList("draw"));
     static ArrayList<String> filtroApuestasAway= new ArrayList<String>(Arrays.asList("away"));
     
-    static int Http403=0;
-    static int Http200=0;
+    static Integer codeRespuesta=0;
 
     public static void main(String[] args) {
     	
@@ -100,227 +99,190 @@ public class Prueba {
         	StringBuilder response= crearPeticionData(urlParameters, urlData);
         	//StringBuilder response= DatosPruebasUtils.leerJsonDeArchivo();  //PARA PRUEBAS
         	
-        	DatosPruebasUtils.guardarJsonEnArchivo(response); //PARA PRUEBAS
-        	
-        	
-        	ArrayList<Odd> lectura = new ArrayList<>();
-            ArrayList<Odd> odds = new ArrayList<>();
-            
-            
-
-            lectura=mapearListaResultadosData(response);
-            
-                         
+        	if(codeRespuesta.intValue()==200) {
+        		
+             	DatosPruebasUtils.guardarJsonEnArchivo(response); //PARA PRUEBAS
+            	
+            	
+            	ArrayList<Odd> lectura = new ArrayList<>();
+                ArrayList<Odd> odds = new ArrayList<>();
                 
-            // 🔹 Leer histórico si existe
-            ArrayList<Odd> oddsAnteriores = leerCSV(CSV_FILE);
-            ArrayList<Odd> oddsGrabarCSV=new ArrayList<Odd>();
-                       
-			
-                        
-            //filtramos eventos que no interesan
-            for (Odd odd : lectura) {
-            	 if (!yaExistia(odd, oddsAnteriores) && odd.getTimeInMin()<=FiltroMinutosAntiguedad  && pasaFiltroDatos(odd)) {
-            		 
-            		 //buscamos los mejores home,away y draw para cono información complementaria
-            		 odd=rellenaCuotas(odd);
-            		 LocalDateTime ahora=LocalDateTime.now();
-            		 odd.setFechaAlerta(ahora);
-            		 
-            		 odds.add(odd);
-            		 oddsGrabarCSV.add(odd);
-            	 } else {
-            		 
-            		 System.out.println("ODD DESCARTADO:");
-            		 System.out.println(odd.toString());
-            		 System.out.println("TimeinMin: " + odd.getTimeInMin());
-            		          		 
-            		 
-            	 }
-            }
-                        
-            //añadimos al array grabarCSV las alertas remanentes que no se hayan renovado en esta lectura
-            for (Odd oddAnterior : oddsAnteriores) {
-            	boolean existe=false;
-            	for (Odd oddNuevo : odds) {
-            		if (oddNuevo.getEvent().equals(oddAnterior.getEvent())
-                            && oddNuevo.getBookie().equals(oddAnterior.getBookie())
-                            && oddNuevo.getSelection().equals(oddAnterior.getSelection())) {
-            			existe=true;
-            		}
-            	}
-				
-            	if(!existe) {
-            		// no existe. COmprobamos ultimo filtro de 18 minutos para saber si hay que añadirlo al CSV o no
-            		LocalDateTime ahora = LocalDateTime.now();
-            		LocalDateTime fechaAlerta = oddAnterior.getFechaAlerta();
-            		if (fechaAlerta.isBefore(ahora.minusMinutes(18))) {
-                        System.out.println("más de 18 minutos anterior. descartamos de Anteriores");
-                    } else {
-                        System.out.println("está dentro de los 18 minutos. COnservamos en Anteiriores");
-                        oddsGrabarCSV.add(oddAnterior);
-                    }
-            		
-            	}
-			}
-            
-            
-            
-            
-            
-            
-            
-            if(lectura.isEmpty()) {
-            	StringBuilder mensajeDebug = new StringBuilder();
-                mensajeDebug.append("<b>Debug resultados</b>\n");
-            	mensajeDebug.append("La petición ha resuelto sin resultados.");
-            } else if (odds.isEmpty()) {
-            	StringBuilder mensajeDebug = new StringBuilder();
-                mensajeDebug.append("<b>Debug resultados</b>\n");
-            	mensajeDebug.append("ningún resultado ha pasado el filtro post proceso");
-            } else {
-            	StringBuilder mensajeDebug = new StringBuilder();
-                mensajeDebug.append("<b>Debug resultados</b>\n");
-            	mensajeDebug.append("Hay resultados post proceso a mostrar");
-            }
-            
-            
-            
-            
-                        
-
-//            // 🔹 Generar HTML filtrando duplicados
-//            StringBuilder html = new StringBuilder();
-//            html.append("<html><body>");
-//            html.append("<h2>Resultados Odds</h2>");
-//            html.append("<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse;'>");
-//            html.append("<tr style='background-color:#f2f2f2;'>");
-//            html.append("<th>Pais</th><th>Competicion</th><th>Evento</th><th>Bookie</th><th>Rating</th><th>apuesta</th><th>Back</th><th>Lay</th><th>antiguedad</th>");
-//            html.append("</tr>");
-//
-//            int nuevos = 0;
-//            for (Odd odd : odds) {
-//                    nuevos++;
-//                    html.append("<tr>")
-//                            .append("<td>").append(odd.getCountry()).append("</td>")
-//                            .append("<td>").append(odd.getCompetition()).append("</td>")
-//                            .append("<td>").append(odd.getEvent()).append("</td>")
-//                            .append("<td>").append(getNombreBookie(odd.getBookie())).append("</td>")
-//                            .append("<td><strong>").append(odd.getRating()).append("</strong></td>")
-//                            .append("<td>").append(odd.getSelection()).append("</td>")
-//                            .append("<td>").append(odd.getBackOdd()).append("</td>")
-//                            .append("<td>").append(odd.getLayOdd()).append("</td>")
-//                            .append("<td>").append(odd.getUpdate_time()).append("</td>")
-//                            .append("</tr>");
-//                
-//            }
-//
-//            if (nuevos == 0) {
-//                html.append("<tr><td colspan='9'>No hay nuevos odds respecto a la ejecución anterior.</td></tr>");
-//            }
-//
-//            html.append("</table>");
-//            html.append("</body></html>");
-
-            // 🔹 Enviar resultado por email
-           // sendEmail(html.toString());
-            
-           ArrayList<Odd> oddsFusionados=new ArrayList<Odd>();
-           for (Odd odd : odds) {
-			String market_id=odd.getMarket_id();
-			boolean encontrado=false;
-			for (Odd odd2 : oddsFusionados) {
-				if(odd2.getMarket_id().equals(market_id)) {
-					Odd o=new Odd();
-					o.setBookie(odd.getBookie());
-					o.setRating(odd.getRating());
-					o.setRatingOriginal(odd.getRatingOriginal());
-					o.setBackOdd(odd.getBackOdd());
-					o.setBackOddOriginal(odd.getBackOddOriginal());
-					o.setLayOdd(odd.getLayOdd());
-					o.setSelection(odd.getSelection());
-					o.setTimeInMin(odd.getTimeInMin());
-					o.setUpdate_time(odd.getUpdate_time());
-					
-					odd2.getOddsFusion().add(o);
-					encontrado=true;
-				}
-			}
-			
-			if(!encontrado) {
-				
-				Odd o=new Odd();
-				o.setBookie(odd.getBookie());
-				o.setRating(odd.getRating());
-				o.setRatingOriginal(odd.getRatingOriginal());
-				o.setBackOdd(odd.getBackOdd());
-				o.setBackOddOriginal(odd.getBackOddOriginal());
-				o.setLayOdd(odd.getLayOdd());
-				o.setSelection(odd.getSelection());
-				o.setTimeInMin(odd.getTimeInMin());
-				o.setUpdate_time(odd.getUpdate_time());
-				
-				ArrayList<Odd> oddsFusion=new ArrayList<Odd>();
-				oddsFusion.add(o);
-				odd.setOddsFusion(oddsFusion);
-				
-				oddsFusionados.add(odd);
-				
-			}
-        	   
-           }
-            
-            
-            
-         // 🔹 Generar mensaje de Telegram (resumen)
-            StringBuilder mensaje = new StringBuilder();
-            
-			for (User user : users) {
-
-				//generamos el array de markets excluidos por el usuario
-				ArrayList<String> marketsExcluidos = new ArrayList<String>();
-				for (AlertaExclusion ex : exclusiones) {
-					if (user.getChatId().toString().equals(ex.getChatId().toString())) {
-						marketsExcluidos.add(ex.getMarket_id());
-					}
-				}
-
-				for (Odd odd : oddsFusionados) {
-					
-					if(!marketsExcluidos.contains(odd.getMarket_id())) {
-						// crear mensaje Alerta
-						mensaje = MessageUtils.createAlerta(odd);
-						// 🔹 Enviar a Telegram
-						TelegramSender.sendTelegramMessageAlerta(mensaje.toString(), odd, user.getChatId().toString());
-					} else {
-						 System.out.println("evento excluido por el usuario " + user.getChatId() + " -->" + odd.getEvent());
-						 System.out.println("no lo enviamos");
-					}
-					
-					
-
-				}
-
-			}
+                
+                
+                lectura=mapearListaResultadosData(response);
+                
+                             
+                    
+                // 🔹 Leer histórico si existe
+                ArrayList<Odd> oddsAnteriores = leerCSV(CSV_FILE);
+                ArrayList<Odd> oddsGrabarCSV=new ArrayList<Odd>();
+                           
+    			
                             
-            
-            // 🔹 Guardar los odds actuales como histórico
-            escribirCSV(CSV_FILE, oddsGrabarCSV);
-            
-            //borrar exclusiones de alertas cuyos eventos ya han pasado
-            List<AlertaExclusion> exclusionesFiltradas=AlertaExclusionCSVUtils.filtrarAlertasPosteriores(exclusiones);
-            AlertaExclusionCSVUtils.escribirAlertasEnCsv(exclusionesFiltradas);
+                //filtramos eventos que no interesan
+                for (Odd odd : lectura) {
+                	 if (!yaExistia(odd, oddsAnteriores) && odd.getTimeInMin()<=FiltroMinutosAntiguedad  && pasaFiltroDatos(odd)) {
+                		 
+                		 //buscamos los mejores home,away y draw para cono información complementaria
+                		 odd=rellenaCuotas(odd);
+                		 LocalDateTime ahora=LocalDateTime.now();
+                		 odd.setFechaAlerta(ahora);
+                		 
+                		 odds.add(odd);
+                		 oddsGrabarCSV.add(odd);
+                	 } else {
+                		 
+                		 System.out.println("ODD DESCARTADO:");
+                		 System.out.println(odd.toString());
+                		 System.out.println("TimeinMin: " + odd.getTimeInMin());
+                		          		 
+                		 
+                	 }
+                }
+                            
+                //añadimos al array grabarCSV las alertas remanentes que no se hayan renovado en esta lectura
+                for (Odd oddAnterior : oddsAnteriores) {
+                	boolean existe=false;
+                	for (Odd oddNuevo : odds) {
+                		if (oddNuevo.getEvent().equals(oddAnterior.getEvent())
+                                && oddNuevo.getBookie().equals(oddAnterior.getBookie())
+                                && oddNuevo.getSelection().equals(oddAnterior.getSelection())) {
+                			existe=true;
+                		}
+                	}
+    				
+                	if(!existe) {
+                		// no existe. COmprobamos ultimo filtro de 18 minutos para saber si hay que añadirlo al CSV o no
+                		LocalDateTime ahora = LocalDateTime.now();
+                		LocalDateTime fechaAlerta = oddAnterior.getFechaAlerta();
+                		if (fechaAlerta.isBefore(ahora.minusMinutes(18))) {
+                            System.out.println("más de 18 minutos anterior. descartamos de Anteriores");
+                        } else {
+                            System.out.println("está dentro de los 18 minutos. COnservamos en Anteiriores");
+                            oddsGrabarCSV.add(oddAnterior);
+                        }
+                		
+                	}
+    			}
+                
+                
+                
+                
+                
+                
+                
+                if(lectura.isEmpty()) {
+                	StringBuilder mensajeDebug = new StringBuilder();
+                    mensajeDebug.append("<b>Debug resultados</b>\n");
+                	mensajeDebug.append("La petición ha resuelto sin resultados.");
+                } else if (odds.isEmpty()) {
+                	StringBuilder mensajeDebug = new StringBuilder();
+                    mensajeDebug.append("<b>Debug resultados</b>\n");
+                	mensajeDebug.append("ningún resultado ha pasado el filtro post proceso");
+                } else {
+                	StringBuilder mensajeDebug = new StringBuilder();
+                    mensajeDebug.append("<b>Debug resultados</b>\n");
+                	mensajeDebug.append("Hay resultados post proceso a mostrar");
+                }
+                
+               
+               ArrayList<Odd> oddsFusionados=new ArrayList<Odd>();
+               for (Odd odd : odds) {
+    			String market_id=odd.getMarket_id();
+    			boolean encontrado=false;
+    			for (Odd odd2 : oddsFusionados) {
+    				if(odd2.getMarket_id().equals(market_id)) {
+    					Odd o=new Odd();
+    					o.setBookie(odd.getBookie());
+    					o.setRating(odd.getRating());
+    					o.setRatingOriginal(odd.getRatingOriginal());
+    					o.setBackOdd(odd.getBackOdd());
+    					o.setBackOddOriginal(odd.getBackOddOriginal());
+    					o.setLayOdd(odd.getLayOdd());
+    					o.setSelection(odd.getSelection());
+    					o.setTimeInMin(odd.getTimeInMin());
+    					o.setUpdate_time(odd.getUpdate_time());
+    					
+    					odd2.getOddsFusion().add(o);
+    					encontrado=true;
+    				}
+    			}
+    			
+    			if(!encontrado) {
+    				
+    				Odd o=new Odd();
+    				o.setBookie(odd.getBookie());
+    				o.setRating(odd.getRating());
+    				o.setRatingOriginal(odd.getRatingOriginal());
+    				o.setBackOdd(odd.getBackOdd());
+    				o.setBackOddOriginal(odd.getBackOddOriginal());
+    				o.setLayOdd(odd.getLayOdd());
+    				o.setSelection(odd.getSelection());
+    				o.setTimeInMin(odd.getTimeInMin());
+    				o.setUpdate_time(odd.getUpdate_time());
+    				
+    				ArrayList<Odd> oddsFusion=new ArrayList<Odd>();
+    				oddsFusion.add(o);
+    				odd.setOddsFusion(oddsFusion);
+    				
+    				oddsFusionados.add(odd);
+    				
+    			}
+            	   
+               }
+                
+                
+                
+             // 🔹 Generar mensaje de Telegram (resumen)
+                StringBuilder mensaje = new StringBuilder();
+                
+    			for (User user : users) {
+
+    				//generamos el array de markets excluidos por el usuario
+    				ArrayList<String> marketsExcluidos = new ArrayList<String>();
+    				for (AlertaExclusion ex : exclusiones) {
+    					if (user.getChatId().toString().equals(ex.getChatId().toString())) {
+    						marketsExcluidos.add(ex.getMarket_id());
+    					}
+    				}
+
+    				for (Odd odd : oddsFusionados) {
+    					
+    					if(!marketsExcluidos.contains(odd.getMarket_id())) {
+    						// crear mensaje Alerta
+    						mensaje = MessageUtils.createAlerta(odd);
+    						// 🔹 Enviar a Telegram
+    						TelegramSender.sendTelegramMessageAlerta(mensaje.toString(), odd, user.getChatId().toString());
+    					} else {
+    						 System.out.println("evento excluido por el usuario " + user.getChatId() + " -->" + odd.getEvent());
+    						 System.out.println("no lo enviamos");
+    					}
+    					
+    					
+
+    				}
+
+    			}
+                                
+                
+                // 🔹 Guardar los odds actuales como histórico
+                escribirCSV(CSV_FILE, oddsGrabarCSV);
+                
+                //borrar exclusiones de alertas cuyos eventos ya han pasado
+                List<AlertaExclusion> exclusionesFiltradas=AlertaExclusionCSVUtils.filtrarAlertasPosteriores(exclusiones);
+                AlertaExclusionCSVUtils.escribirAlertasEnCsv(exclusionesFiltradas);
+        	}  else {
+        		TelegramSender.sendTelegramMessageVigilante();
+        	    
+        	}
+        	
+   
             
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
-        
-        if(Http403>0) {
-        	TelegramSender.sendTelegramMessageVigilante(Http403,Http200);
-        }
-        
+              
         System.out.println("FIN EJECUCION");
     }
     
@@ -608,12 +570,14 @@ public class Prueba {
         mensajeDebug.append("<b>Debug Ejecucion</b>\n");
         
         if(responseCode!=200) {
-        	Http200++;
+        	codeRespuesta=200;
+        	
         	mensajeDebug.append("resultado Petición HTTP: <b>").append(code).append("</b>\n");
         	//mensajeDebug.append("⚽ <b>").append(code).append("</b>\n");
                          	
         } else {
-        	Http403++;
+        	codeRespuesta=Integer.valueOf(code);
+        	
         	mensajeDebug.append("resultado Petición HTTP: <b>").append(code).append("</b>\n");
         	//mensajeDebug.append("⚽ <b>").append(code).append("</b>\n");
         }
