@@ -23,7 +23,7 @@ public class TelegramSender {
     private static final String[] CHAT_IDS_DEBUG = {"-4914584937"}; //<-- este es el chatDebug
     
     
-    private static final String[] CHAT_IDS_VIGILANTE = {"403482161"}; //<-- este es el chatDebug
+    private static final String[] CHAT_IDS_VIGILANTE = {"1066152103"}; //<-- este es el chatDebug
     
     
 
