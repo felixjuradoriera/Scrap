@@ -76,8 +76,12 @@ public class Prueba {
     static ArrayList<String> filtroApuestasDraw= new ArrayList<String>(Arrays.asList("draw"));
     static ArrayList<String> filtroApuestasAway= new ArrayList<String>(Arrays.asList("away"));
     
+    static int Http403=0;
+    static int Http200=0;
 
     public static void main(String[] args) {
+    	
+    	
         	
     	//cargamos la lista de usuarios
     	List<User> users=UsersUtils.readUsers();
@@ -312,6 +316,10 @@ public class Prueba {
             e.printStackTrace();
         }
         
+        
+        if(Http403>0) {
+        	TelegramSender.sendTelegramMessageVigilante(Http403,Http200);
+        }
         
         System.out.println("FIN EJECUCION");
     }
@@ -600,10 +608,12 @@ public class Prueba {
         mensajeDebug.append("<b>Debug Ejecucion</b>\n");
         
         if(responseCode!=200) {
+        	Http200++;
         	mensajeDebug.append("resultado Petición HTTP: <b>").append(code).append("</b>\n");
         	//mensajeDebug.append("⚽ <b>").append(code).append("</b>\n");
                          	
         } else {
+        	Http403++;
         	mensajeDebug.append("resultado Petición HTTP: <b>").append(code).append("</b>\n");
         	//mensajeDebug.append("⚽ <b>").append(code).append("</b>\n");
         }

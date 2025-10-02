@@ -23,6 +23,9 @@ public class TelegramSender {
     private static final String[] CHAT_IDS_DEBUG = {"-4914584937"}; //<-- este es el chatDebug
     
     
+    private static final String[] CHAT_IDS_VIGILANTE = {"403482161"}; //<-- este es el chatDebug
+    
+    
 
     public static void sendTelegramMessage(String text) {
     	 for (String chatId : CHAT_IDS) {
@@ -162,5 +165,52 @@ public class TelegramSender {
        }
    	 }
    }
+    
+    
+    public static void sendTelegramMessageVigilante(int http403, int http200) {
+    	
+    	 StringBuilder mensajeDebug = new StringBuilder();
+         mensajeDebug.append("<b>Debug Ejecucion</b>\n");
+         mensajeDebug.append("Peticiones HTTP200:  <b>").append(http200).append("</b>\n");
+         mensajeDebug.append("Peticiones HTTP403:  <b>").append(http403).append("</b>\n");
+         mensajeDebug.append("<b>Probable caída de la VPN. Avisar").append("</b>\n");
+         String text=mensajeDebug.toString();
+         
+      	 for (String chatId : CHAT_IDS_VIGILANTE) {
+          try {
+              String urlString = "https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage";
+              String urlParameters = "chat_id=" + chatId
+                      + "&text=" + URLEncoder.encode(text, "UTF-8")
+                      + "&parse_mode=HTML"; // HTML limitado
+
+              byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+
+              URL url = new URL(urlString);
+              HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+              conn.setRequestMethod("POST");
+              conn.setDoOutput(true);
+
+              try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
+                  wr.write(postData);
+              }
+
+              int responseCode = conn.getResponseCode();
+              System.out.println("📩 Telegram response: " + responseCode);
+
+              try (BufferedReader in = new BufferedReader(
+                      new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                  String line;
+                  StringBuilder response = new StringBuilder();
+                  while ((line = in.readLine()) != null) {
+                      response.append(line);
+                  }
+                  System.out.println("📩 Respuesta Telegram: " + response);
+              }
+
+          } catch (Exception e) {
+              e.printStackTrace();
+          }
+      	 }
+      }
     
 }
