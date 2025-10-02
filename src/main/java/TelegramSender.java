@@ -167,12 +167,11 @@ public class TelegramSender {
    }
     
     
-    public static void sendTelegramMessageVigilante(int http403, int http200) {
+    public static void sendTelegramMessageVigilante() {
     	
     	 StringBuilder mensajeDebug = new StringBuilder();
          mensajeDebug.append("<b>Debug Ejecucion</b>\n");
-         mensajeDebug.append("Peticiones HTTP200:  <b>").append(http200).append("</b>\n");
-         mensajeDebug.append("Peticiones HTTP403:  <b>").append(http403).append("</b>\n");
+         mensajeDebug.append("Peticiones HTTP403:  <b>").append("1").append("</b>\n");
          mensajeDebug.append("<b>Probable caída de la VPN. Avisar").append("</b>\n");
          String text=mensajeDebug.toString();
          
