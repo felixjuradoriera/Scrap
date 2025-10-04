@@ -68,6 +68,9 @@ public class Prueba {
     private static  String cuotaMinima="2.5";
     private static  String cuotaNivel1="2.5";
     private static  String cuotaNivel2="5";
+    
+    private static  Double ratingNivel1Minimo=Double.valueOf(ratingNivel1);
+	private static  Double ratingNivel2Minimo=Double.valueOf(ratingNivel2);
 
     private static final String CSV_FILE = "C:"+ File.separator +"BOT" + File.separator +"CONF"+File.separator+ "oddsAnteriores.csv";
     
@@ -90,9 +93,27 @@ public class Prueba {
     	List<User> users=UsersUtils.readUsers();
     	List<AlertaExclusion> exclusiones=new ArrayList<>();
     	HashMap<Long, ConfAlerta> confAlertas=new HashMap<>();
+    	
+    	
+    	
     	try {
 			exclusiones=AlertaExclusionCSVUtils.loadFromCSV();
 			confAlertas=ConfAlertasCSVUtils.loadFromCSV();
+			
+			if(!confAlertas.isEmpty()) {
+				for (Map.Entry<Long, ConfAlerta> entry : confAlertas.entrySet()) {
+		            Long clave = entry.getKey();
+		            ConfAlerta valor = entry.getValue();
+		            	if(valor.getRatioNivel1()<ratingNivel1Minimo) {
+		            		ratingNivel1Minimo=valor.getRatioNivel1();
+		            	}
+		            	if(valor.getRatioNivel2()<ratingNivel2Minimo) {
+		            		ratingNivel2Minimo=valor.getRatioNivel2();
+		            	}
+		            }	
+			}
+			
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -400,6 +421,19 @@ public class Prueba {
     	}
     	
     	//filtro rating
+    	if(cuota<5) {
+    		if(rating<ratingNivel1Minimo) {
+    			System.out.println("Evento no pasa filtro rating/cuota NIVEL 1 --> " + odd.getRating() + "/" + odd.getBackOdd());
+    			return false;
+    		}
+    	} else {
+    		if(rating<ratingNivel2Minimo) {
+    			System.out.println("Evento no pasa filtro rating/cuota NIVEL 2 --> " + odd.getRating() + "/" + odd.getBackOdd());
+    			return false;
+    		}
+    	}
+    	
+    	
     	// Hay un primer filtro de rating en la búsqueda que es el mínimo aqui se contrastan cuotas con ratings
 //    	if(cuota<5 && rating<95) {
 //    		System.out.println("Evento no pasa filtro rating/cuota --> " + odd.getRating() + "/" + odd.getBackOdd());
