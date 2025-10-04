@@ -63,7 +63,11 @@ public class Prueba {
     
     private static  String uid = "e7dfca01f394755c11f853602cb2608a";
     private static  String ratingInicial="92";
+    private static  String ratingNivel1="95";
+    private static  String ratingNivel2="92";
     private static  String cuotaMinima="2.5";
+    private static  String cuotaNivel1="2.5";
+    private static  String cuotaNivel2="5";
 
     private static final String CSV_FILE = "C:"+ File.separator +"BOT" + File.separator +"CONF"+File.separator+ "oddsAnteriores.csv";
     
@@ -85,8 +89,10 @@ public class Prueba {
     	//cargamos la lista de usuarios
     	List<User> users=UsersUtils.readUsers();
     	List<AlertaExclusion> exclusiones=new ArrayList<>();
+    	HashMap<Long, ConfAlerta> confAlertas=new HashMap<>();
     	try {
 			exclusiones=AlertaExclusionCSVUtils.loadFromCSV();
+			confAlertas=ConfAlertasCSVUtils.loadFromCSV();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -237,6 +243,15 @@ public class Prueba {
                 StringBuilder mensaje = new StringBuilder();
                 
     			for (User user : users) {
+    				
+    				ConfAlerta confAlerta=confAlertas.get(user.getChatId());
+    				if(confAlerta==null) {
+    					confAlerta=new ConfAlerta();
+    					confAlerta.setChatId(user.getChatId());
+    					confAlerta.setRatioNivel1(Double.valueOf(ratingNivel1));
+    					confAlerta.setRatioNivel2(Double.valueOf(ratingNivel2));
+    				}
+    							
 
     				//generamos el array de markets excluidos por el usuario
     				ArrayList<String> marketsExcluidos = new ArrayList<String>();
@@ -247,12 +262,36 @@ public class Prueba {
     				}
 
     				for (Odd odd : oddsFusionados) {
-    					
+    					    					
     					if(!marketsExcluidos.contains(odd.getMarket_id())) {
-    						// crear mensaje Alerta
-    						mensaje = MessageUtils.createAlerta(odd);
-    						// 🔹 Enviar a Telegram
-    						TelegramSender.sendTelegramMessageAlerta(mensaje.toString(), odd, user.getChatId().toString());
+    						
+    						boolean enviar=true;
+    						Double cuotaBack=Double.valueOf(odd.getBackOdd());
+    						Double rating=Double.valueOf(odd.getRating());
+    						
+    						if(cuotaBack<5) {
+    							if(rating<confAlerta.getRatioNivel1()) {
+    								enviar=false;
+    								System.out.println("ratio nivel1 NO pasa configuración ratio usuario cuota:"+ cuotaBack + " rating:" + rating + " ratingUsuario:" + confAlerta.getRatioNivel1()); 
+    							} else {
+    								System.out.println("ratio nivel1 SI pasa configuración ratio usuario cuota:"+ cuotaBack + " rating:" + rating + " ratingUsuario:" + confAlerta.getRatioNivel1());
+    							}
+    						} else {
+    							if(rating<confAlerta.getRatioNivel2()) {
+    								enviar=false;
+    								System.out.println("ratio nivel2 NO pasa configuración ratio usuario cuota:"+ cuotaBack + " rating:" + rating + " ratingUsuario:" + confAlerta.getRatioNivel2()); 
+    							} else {
+    								System.out.println("ratio nivel2 SI pasa configuración ratio usuario cuota:"+ cuotaBack + " rating:" + rating + " ratingUsuario:" + confAlerta.getRatioNivel2());
+    							}
+    						}
+    						
+    						if (enviar) {
+    							// crear mensaje Alerta
+        						mensaje = MessageUtils.createAlerta(odd);
+        						// 🔹 Enviar a Telegram
+        						TelegramSender.sendTelegramMessageAlerta(mensaje.toString(), odd, user.getChatId().toString());	
+    						}	
+    						
     					} else {
     						 System.out.println("evento excluido por el usuario " + user.getChatId() + " -->" + odd.getEvent());
     						 System.out.println("no lo enviamos");
@@ -362,10 +401,10 @@ public class Prueba {
     	
     	//filtro rating
     	// Hay un primer filtro de rating en la búsqueda que es el mínimo aqui se contrastan cuotas con ratings
-    	if(cuota<5 && rating<95) {
-    		System.out.println("Evento no pasa filtro rating/cuota --> " + odd.getRating() + "/" + odd.getBackOdd());
-    		return false;
-    	}
+//    	if(cuota<5 && rating<95) {
+//    		System.out.println("Evento no pasa filtro rating/cuota --> " + odd.getRating() + "/" + odd.getBackOdd());
+//    		return false;
+//    	}
     	    	
     	
     	    	
