@@ -15,7 +15,8 @@ public class TelegramSender {
     
     
    // private static final String[] CHAT_IDS = {"403482161","-1003064907759"};
-   private static final String[] CHAT_IDS = {"403482161"};  //<-- este soy yo
+    /*  ESTE METODO NO SE UTILIZA*/
+    private static final String[] CHAT_IDS = {"403482161"};  //<-- este soy yo
   // private static final String[] CHAT_IDS = {"-1003064907759"}; //<-- este es el chat grupal
     
     //hola aqui
@@ -23,10 +24,12 @@ public class TelegramSender {
     private static final String[] CHAT_IDS_DEBUG = {"-4914584937"}; //<-- este es el chatDebug
     
     
-    private static final String[] CHAT_IDS_VIGILANTE = {"1066152103"}; //<-- este es el chatDebug
-    
+    private static final String[] CHAT_IDS_VIGILANTE = {"1066152103"}; //<-- este es el chat de lucas
+    //private static final String[] CHAT_IDS_VIGILANTE = {"403482161"}; //<-- este soy yo
     
 
+    
+    /*  ESTE METODO NO SE UTILIZA*/
     public static void sendTelegramMessage(String text) {
     	 for (String chatId : CHAT_IDS) {
         try {

@@ -65,10 +65,12 @@ public class Prueba {
     private static  String ratingInicial="92";
     private static  String ratingNivel1="95";
     private static  String ratingNivel2="92";
+    private static  String cuotaMinimaInicial="2.5";
     private static  String cuotaMinima="2.5";
     private static  String cuotaNivel1="2.5";
     private static  String cuotaNivel2="5";
     
+    private static  Double nCuotaMinima=Double.valueOf(cuotaMinima);
     private static  Double ratingNivel1Minimo=Double.valueOf(ratingNivel1);
 	private static  Double ratingNivel2Minimo=Double.valueOf(ratingNivel2);
 
@@ -110,8 +112,14 @@ public class Prueba {
 		            	if(valor.getRatioNivel2()<ratingNivel2Minimo) {
 		            		ratingNivel2Minimo=valor.getRatioNivel2();
 		            	}
+		            	
+		            	if(valor.getCuotaMinima()<nCuotaMinima) {
+		            		nCuotaMinima=valor.getCuotaMinima();
+		            	}
 		            }	
 			}
+			
+			cuotaMinima=String.valueOf(nCuotaMinima);
 			
 			
 		} catch (IOException e) {
@@ -119,26 +127,19 @@ public class Prueba {
 			e.printStackTrace();
 		}
         
-        String urlParameters=crearUrlFiltroPeticionData(uid, filtroBookies2UP, ratingInicial, cuotaMinima, filtroApuestas2UP, "");
+        
 
         try {
-        	
-        	StringBuilder response= crearPeticionData(urlParameters, urlData);
-        	//StringBuilder response= DatosPruebasUtils.leerJsonDeArchivo();  //PARA PRUEBAS
-        	
-        	if(codeRespuesta.intValue()==200) {
         		
-             	DatosPruebasUtils.guardarJsonEnArchivo(response); //PARA PRUEBAS
-            	
-            	
             	ArrayList<Odd> lectura = new ArrayList<>();
                 ArrayList<Odd> odds = new ArrayList<>();
                 
+                String urlParameters=crearUrlFiltroPeticionData(uid, filtroBookies2UP, ratingInicial, cuotaMinima, filtroApuestas2UP, "");
+                lectura=mapearListaResultadosData(urlParameters, urlData);
                 
-                
-                lectura=mapearListaResultadosData(response);
-                
-                             
+                if(lectura==null) {
+                	System.exit(0);
+                 }
                     
                 // 🔹 Leer histórico si existe
                 ArrayList<Odd> oddsAnteriores = leerCSV(CSV_FILE);
@@ -271,6 +272,7 @@ public class Prueba {
     					confAlerta.setChatId(user.getChatId());
     					confAlerta.setRatioNivel1(Double.valueOf(ratingNivel1));
     					confAlerta.setRatioNivel2(Double.valueOf(ratingNivel2));
+    					confAlerta.setCuotaMinima(Double.valueOf(cuotaMinimaInicial));
     				}
     							
 
@@ -306,6 +308,13 @@ public class Prueba {
     							}
     						}
     						
+    						if(cuotaBack<confAlerta.getCuotaMinima()) {
+    							enviar=false;
+    							System.out.println("cuota NO pasa cuotaMinima usuario -->   cuota:"+ cuotaBack +  "cuotaMinimaUsuario;" + confAlerta.getCuotaMinima());
+    						} else {
+    							System.out.println("cuota SI pasa cuotaMinima usuario -->   cuota:"+ cuotaBack +  "cuotaMinimaUsuario;" + confAlerta.getCuotaMinima());
+    						}
+    						
     						if (enviar) {
     							// crear mensaje Alerta
         						mensaje = MessageUtils.createAlerta(odd);
@@ -331,14 +340,7 @@ public class Prueba {
                 //borrar exclusiones de alertas cuyos eventos ya han pasado
                 List<AlertaExclusion> exclusionesFiltradas=AlertaExclusionCSVUtils.filtrarAlertasPosteriores(exclusiones);
                 AlertaExclusionCSVUtils.escribirAlertasEnCsv(exclusionesFiltradas);
-        	}  else {
-        		TelegramSender.sendTelegramMessageVigilante();
-        	    
-        	}
         	
-   
-            
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -599,7 +601,7 @@ public class Prueba {
     	
     	urlFiltro+="&min-liquidity=&sort-column=4&sort-direction=desc";
     	
-    	urlFiltro+="&offset=0&date-from=&date-to=&exchange=all&exchanges=all";
+    	urlFiltro+="&offset=$&date-from=&date-to=&exchange=all&exchanges=all";
     		
     	urlFiltro+="&sport[]=1";
     	
@@ -695,81 +697,115 @@ public class Prueba {
     }
 
     
-    private static ArrayList<Odd> mapearListaResultadosData(StringBuilder response) throws JsonMappingException, JsonProcessingException { 
+    private static ArrayList<Odd> mapearListaResultadosData(String filtroPeticion, String urlPeticion) throws JsonMappingException, JsonProcessingException { 
+    	
     	
     	ArrayList<Odd> lectura=new ArrayList<Odd>();
     	
-       	// 🔹 Procesar JSON con Jackson
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(response.toString());
-
-        JsonNode dataArray = root.get("data");
-        if (dataArray != null && dataArray.isArray()) {
-            for (JsonNode item : dataArray) {
-                Odd odd = new Odd();
-                odd.setEvent(item.path("event").asText());
-                odd.setBookie(item.path("bookie_id").asText());
-                odd.setRating(item.path("rating").asText());
-                odd.setRatingOriginal(item.path("rating").asText());
-                odd.setBackOdd(item.path("back_odd").asText());
-                odd.setBackOddOriginal(item.path("back_odd").asText());
-                odd.setLayOdd(item.path("lay_odd").asText());
-                odd.setSelection(item.path("selection").asText());
-                odd.setCompetition(item.path("competition").asText());
-                odd.setUpdate_time(item.path("update_time").asText());
-                odd.setCountry(item.path("country").asText());
-                odd.setMarket_id(item.path("market_id").asText());
-                
-                String parteHora = item.path("update_time").asText().split(":")[0];  
-                Integer horaEntero = Integer.parseInt(parteHora);
-                odd.setTimeInMin(horaEntero);
-                
-                
-             // Definir el formato de entrada (tal como llega el String)
-                DateTimeFormatter formatterEntrada = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                // Parsear el String a LocalDateTime
-                LocalDateTime fecha = LocalDateTime.parse(item.path("open_date").asText(), formatterEntrada);
-                odd.setFechaPartido(fecha);
-                // Definir el formato de salida
-                DateTimeFormatter formatterSalida = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                // Convertir a String en el nuevo formato
-                String fechaFormateada = fecha.format(formatterSalida);
-                odd.setsFechaPartido(fechaFormateada);
-                
-                
-                //rebaja cuotas  (ej:codere)
-                odd=ajustaCuotaRating(odd);
-                
-                
-                //asignar Nivel Alerta
-                Double cuota=Double.valueOf(odd.getBackOdd());
-                Double rating=Double.valueOf(odd.getRating());
-                Integer nivelAlerta=0;
-                if(cuota>5) {
-                	if(rating>93.5) {
-                		nivelAlerta=1;
-                	}
-                	if(rating>95) {
-                		nivelAlerta=2;
-                	}
-                	
-                } else {
-                	if(rating>96.25) {
-                		nivelAlerta=1;
-                	}
-                	if(rating>97.5) {
-                		nivelAlerta=2;
-                	}
-                	
-                }
-                odd.setNivelAlerta(nivelAlerta);
-                
-                
-                lectura.add(odd);
-            }
-        }
-
+    	boolean hayMasResultados=true;
+    	int offset=0;
     	
+	    while (hayMasResultados && offset<6) {
+	    	String urlParameters=filtroPeticion.replace("offset=$", "offset=" + offset);
+	    	StringBuilder response= crearPeticionData(urlParameters, urlData);
+	    	
+	    	
+	    	
+	    	if(codeRespuesta.intValue()==200) {
+	    		
+	    		DatosPruebasUtils.guardarJsonEnArchivo(response);
+	    		
+	    		// 🔹 Procesar JSON con Jackson
+	            ObjectMapper mapper = new ObjectMapper();
+	            JsonNode root = mapper.readTree(response.toString());
+	            JsonNode dataArray = root.get("data");
+	            	    		
+	            if (dataArray != null && dataArray.isArray()) {
+	            	
+	                for (JsonNode item : dataArray) {
+	                    Odd odd = new Odd();
+	                    odd.setEvent(item.path("event").asText());
+	                    odd.setBookie(item.path("bookie_id").asText());
+	                    odd.setRating(item.path("rating").asText());
+	                    odd.setRatingOriginal(item.path("rating").asText());
+	                    odd.setBackOdd(item.path("back_odd").asText());
+	                    odd.setBackOddOriginal(item.path("back_odd").asText());
+	                    odd.setLayOdd(item.path("lay_odd").asText());
+	                    odd.setSelection(item.path("selection").asText());
+	                    odd.setCompetition(item.path("competition").asText());
+	                    odd.setUpdate_time(item.path("update_time").asText());
+	                    odd.setCountry(item.path("country").asText());
+	                    odd.setMarket_id(item.path("market_id").asText());
+	                    
+	                    String parteHora = item.path("update_time").asText().split(":")[0];  
+	                    Integer horaEntero = Integer.parseInt(parteHora);
+	                    odd.setTimeInMin(horaEntero);
+	                    
+	                    
+	                 // Definir el formato de entrada (tal como llega el String)
+	                    DateTimeFormatter formatterEntrada = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	                    // Parsear el String a LocalDateTime
+	                    LocalDateTime fecha = LocalDateTime.parse(item.path("open_date").asText(), formatterEntrada);
+	                    odd.setFechaPartido(fecha);
+	                    // Definir el formato de salida
+	                    DateTimeFormatter formatterSalida = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+	                    // Convertir a String en el nuevo formato
+	                    String fechaFormateada = fecha.format(formatterSalida);
+	                    odd.setsFechaPartido(fechaFormateada);
+	                    
+	                    
+	                    //rebaja cuotas  (ej:codere)
+	                    odd=ajustaCuotaRating(odd);
+	                    
+	                    
+	                    //asignar Nivel Alerta
+	                    Double cuota=Double.valueOf(odd.getBackOdd());
+	                    Double rating=Double.valueOf(odd.getRating());
+	                    Integer nivelAlerta=0;
+	                    if(cuota>5) {
+	                    	if(rating>93.5) {
+	                    		nivelAlerta=1;
+	                    	}
+	                    	if(rating>95) {
+	                    		nivelAlerta=2;
+	                    	}
+	                    	
+	                    } else {
+	                    	if(rating>96.25) {
+	                    		nivelAlerta=1;
+	                    	}
+	                    	if(rating>97.5) {
+	                    		nivelAlerta=2;
+	                    	}
+	                    	
+	                    }
+	                    odd.setNivelAlerta(nivelAlerta);
+	                    
+	                    
+	                    lectura.add(odd);
+	                }
+	                
+	                if(dataArray.size()<10) {
+	                	hayMasResultados=false;
+	                } else {
+	                	offset++;
+	                }
+	                
+	            } else {
+	            	hayMasResultados=false;
+	            }
+	    		
+	    		
+	    	} else {
+	    		hayMasResultados=false;
+        		TelegramSender.sendTelegramMessageVigilante();
+        		return null;
+        	    
+        	}
+	    	
+		}
+    	
+    	   	
     	return lectura;
     	
     }
@@ -864,8 +900,7 @@ public class Prueba {
 		ArrayList<Odd> lectura = new ArrayList<>();
 		
 		String urlParameters=crearUrlFiltroPeticionData(uid, filtroBookies2UP2WAY, "1", "1", filtroApuestasHome, codigosEventos);
-		StringBuilder response= crearPeticionData(urlParameters, urlData);
-    	lectura=mapearListaResultadosData(response);
+		lectura=mapearListaResultadosData(urlParameters, urlData);
     	lectura.sort(Comparator.comparingDouble(o -> Double.parseDouble(o.getBackOdd())));
     	Collections.reverse(lectura);
 		for (Odd o : lectura.subList(0, Math.min(3, lectura.size()))) {
@@ -874,8 +909,7 @@ public class Prueba {
 		}
 		
 		urlParameters=crearUrlFiltroPeticionData(uid, filtroBookiesVacio, "1", "1", filtroApuestasDraw, codigosEventos);
-		response= crearPeticionData(urlParameters, urlData);
-		lectura=mapearListaResultadosData(response);
+		lectura=mapearListaResultadosData(urlParameters, urlData);
 		lectura.sort(Comparator.comparingDouble(o -> Double.parseDouble(o.getBackOdd())));
     	Collections.reverse(lectura);
 		for (Odd o : lectura.subList(0, Math.min(3, lectura.size()))) {
@@ -885,7 +919,7 @@ public class Prueba {
 		
 		//Buscamos la cuota "empate" en betfair exchange
 		urlParameters=crearUrlFiltroPeticionExchange(odd.getMarket_id());
-		response= crearPeticionData(urlParameters, urlExchange);
+		StringBuilder response= crearPeticionData(urlParameters, urlExchange);
 		List<Runner> listaExchange=MapearResultadosExchange(response.toString());
 		
 		Double mejorCuotaDrawExchange=0.0;
@@ -918,8 +952,7 @@ public class Prueba {
 		
 		
 		urlParameters=crearUrlFiltroPeticionData(uid, filtroBookies2UP2WAY, "1", "1", filtroApuestasAway, codigosEventos);
-		response= crearPeticionData(urlParameters, urlData);
-		lectura=mapearListaResultadosData(response);
+		lectura=mapearListaResultadosData(urlParameters, urlData);
 		lectura.sort(Comparator.comparingDouble(o -> Double.parseDouble(o.getBackOdd())));
     	Collections.reverse(lectura);
 		for (Odd o : lectura.subList(0, Math.min(3, lectura.size()))) {
