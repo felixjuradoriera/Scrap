@@ -78,7 +78,7 @@ public class BotAlertas {
                 ArrayList<Odd> odds = new ArrayList<>();
                 
                 String urlParameters=NinjaService.crearUrlFiltroPeticionData(Configuracion.uid, Configuracion.filtroBookies2UP, Configuracion.ratingInicial, Configuracion.cuotaMinima, Configuracion.filtroApuestas2UP, "");
-                lectura=NinjaService.mapearListaResultadosData(urlParameters, Configuracion.urlData);
+                lectura=NinjaService.mapearListaResultadosData(urlParameters, Configuracion.urlData, true);
                 
                 if(lectura==null) {
                 	System.exit(0);
@@ -205,6 +205,7 @@ public class BotAlertas {
                }
                 
                 
+               TelegramSender.eventosFinales=oddsFusionados.size();
                 
              // 🔹 Generar mensaje de Telegram (resumen)
                 StringBuilder mensaje = new StringBuilder();
@@ -265,6 +266,7 @@ public class BotAlertas {
         						mensaje = AlertasFactory.createAlerta(odd);
         						System.out.println("Alerta enviada");
         						// 🔹 Enviar a Telegram
+        						TelegramSender.alertasEnviadas++;
         						TelegramSender.sendTelegramMessageAlerta(mensaje.toString(), odd, user.getChatId().toString());	
     						}	
     						
@@ -289,7 +291,24 @@ public class BotAlertas {
         	
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        } finally {
+			
+	        StringBuilder mensajeDebug = new StringBuilder();
+	        mensajeDebug.append("<b>Debug Ejecucion</b>\n\n");
+	        
+	        mensajeDebug.append("HTTP 200 Inicial: <b>").append(TelegramSender.response200_Inicial).append("</b>\n");
+	        mensajeDebug.append("HTTP 200 Events: <b>").append(TelegramSender.response200_Events).append("</b>\n");
+	        mensajeDebug.append("HTTP 200 Adicional: <b>").append(TelegramSender.response200_Adicional).append("</b>\n");
+	        mensajeDebug.append("Peticiones Exchange: <b>").append(TelegramSender.peticionesAExchange).append("</b>\n");
+	        mensajeDebug.append("HTTP 403 Adicional: <b>").append(TelegramSender.response403).append("</b>\n");
+	        mensajeDebug.append("Eventos Iniciales: <b>").append(TelegramSender.eventosIniciales).append("</b>\n");
+	        mensajeDebug.append("Eventos Finales: <b>").append(TelegramSender.eventosFinales).append("</b>\n");
+	        mensajeDebug.append("Eventos Alertas enviadas: <b>").append(TelegramSender.alertasEnviadas).append("</b>\n");
+	      
+	       TelegramSender.sendTelegramMessageDebug(mensajeDebug.toString());
+        	
+        	
+		}
               
         System.out.println("FIN EJECUCION");
     }
