@@ -1,42 +1,27 @@
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import conf.Configuracion;
 import dto.AlertaExclusion;
 import dto.ConfAlerta;
-import dto.Event;
 import dto.Odd;
 import dto.User;
-import exchange.PriceSize;
-import exchange.Runner;
 import service.NinjaService;
+import telegram.TelegramSender;
 import utils.AlertaExclusionCSVUtils;
+import utils.AlertasFactory;
 import utils.ConfAlertasCSVUtils;
-import utils.MessageUtils;
 import utils.UsersUtils;
 
 public class BotAlertas {
@@ -110,7 +95,13 @@ public class BotAlertas {
                 	 if (!yaExistia(odd, oddsAnteriores) && odd.getTimeInMin()<=Configuracion.FiltroMinutosAntiguedad  && pasaFiltroDatos(odd)) {
                 		 
                 		 //buscamos los mejores home,away y draw para cono información complementaria
-                		 odd=NinjaService.rellenaCuotasTodas(odd);
+                		 
+                		 if("1".equals(odd.getSelectionId())) {
+                			odd=NinjaService.rellenaCuotasSoloHome(odd);	 
+                		 } else if ("2".equals(odd.getSelectionId())) {
+                			odd=NinjaService.rellenaCuotasSoloAway(odd);
+                		 } 
+                		 
                 		 LocalDateTime ahora=LocalDateTime.now();
                 		 odd.setFechaAlerta(ahora);
                 		 
@@ -150,10 +141,6 @@ public class BotAlertas {
                 		
                 	}
     			}
-                
-                
-                
-                
                 
                 
                 
@@ -275,10 +262,10 @@ public class BotAlertas {
     						
     						if (enviar) {
     							// crear mensaje Alerta
-        						mensaje = MessageUtils.createAlerta(odd);
+        						mensaje = AlertasFactory.createAlerta(odd);
         						System.out.println("Alerta enviada");
         						// 🔹 Enviar a Telegram
-        						//TelegramSender.sendTelegramMessageAlerta(mensaje.toString(), odd, user.getChatId().toString());	
+        						TelegramSender.sendTelegramMessageAlerta(mensaje.toString(), odd, user.getChatId().toString());	
     						}	
     						
     					} else {
