@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ import telegram.TelegramSender;
 import utils.AlertaExclusionCSVUtils;
 import utils.AlertasFactory;
 import utils.ConfAlertasCSVUtils;
+import utils.OddUtils;
 import utils.UsersUtils;
 
 public class BotAlertas {
@@ -86,10 +88,12 @@ public class BotAlertas {
                     
                 // 🔹 Leer histórico si existe
                 ArrayList<Odd> oddsAnteriores = leerCSV(Configuracion.CSV_FILE);
+                ArrayList<Odd> oddsAnterioresHist = leerCSV(Configuracion.CSV_FILE_HIST);
                 ArrayList<Odd> oddsGrabarCSV=new ArrayList<Odd>();
+                ArrayList<Odd> oddsGrabarCSVHist=new ArrayList<Odd>();
                            
     			
-                            
+                              
                 //filtramos eventos que no interesan
                 for (Odd odd : lectura) {
                 	 if (!yaExistia(odd, oddsAnteriores) && odd.getTimeInMin()<=Configuracion.FiltroMinutosAntiguedad  && pasaFiltroDatos(odd)) {
@@ -104,9 +108,15 @@ public class BotAlertas {
                 		 
                 		 LocalDateTime ahora=LocalDateTime.now();
                 		 odd.setFechaAlerta(ahora);
+                		 if(odd.getIdOdd()==null || odd.getIdOdd()==0) {
+                			 odd.setIdOdd(OddUtils.dameIdOdd());	 
+                		 }
+                		 
                 		 
                 		 odds.add(odd);
                 		 oddsGrabarCSV.add(odd);
+                		 oddsGrabarCSVHist.add(odd);
+                		 
                 	 } else {
                 		 
                 		 System.out.println("ODD DESCARTADO:");
@@ -137,6 +147,31 @@ public class BotAlertas {
                         } else {
                             System.out.println("está dentro de los 18 minutos. COnservamos en Anteiriores");
                             oddsGrabarCSV.add(oddAnterior);
+                        }
+                		
+                	}
+    			}
+                
+                //añadimos al array HIST alertas
+                for (Odd oddAnteriorHist : oddsAnterioresHist) {
+                	boolean existe=false;
+                	for (Odd oddNuevo : odds) {
+                		if (oddNuevo.getEvent().equals(oddAnteriorHist.getEvent())
+                                && oddNuevo.getBookie().equals(oddAnteriorHist.getBookie())
+                                && oddNuevo.getSelection().equals(oddAnteriorHist.getSelection())) {
+                			existe=true;
+                		}
+                	}
+    				
+                	if(!existe) {
+                		// no existe. COmprobamos ultimo filtro de 18 minutos para saber si hay que añadirlo al CSV o no
+                		LocalDateTime ahora = LocalDateTime.now();
+                		LocalDateTime fechaPartido = oddAnteriorHist.getFechaPartido();
+                		if (fechaPartido.isBefore(ahora.minusDays(2))) {
+                            System.out.println("mas de 1 dias. descartamos de Anteriores HIST");
+                        } else {
+                            System.out.println("está dentro de 1 DIAS. COnservamos en Anteiriores HIST");
+                            oddsGrabarCSVHist.add(oddAnteriorHist);
                         }
                 		
                 	}
@@ -285,7 +320,11 @@ public class BotAlertas {
                                 
                 
                 // 🔹 Guardar los odds actuales como histórico
+    			
+    			oddsGrabarCSV.sort(Comparator.comparing(Odd::getFechaPartido, Comparator.nullsLast(Comparator.naturalOrder())));
                 escribirCSV(Configuracion.CSV_FILE, oddsGrabarCSV);
+                oddsGrabarCSVHist.sort(Comparator.comparing(Odd::getFechaPartido, Comparator.nullsLast(Comparator.naturalOrder())));
+                escribirCSV(Configuracion.CSV_FILE_HIST, oddsGrabarCSVHist);
                 
                 //borrar exclusiones de alertas cuyos eventos ya han pasado
                 List<AlertaExclusion> exclusionesFiltradas=AlertaExclusionCSVUtils.filtrarAlertasPosteriores(exclusiones);
@@ -427,7 +466,7 @@ public class BotAlertas {
                 pw.println(String.join(";",
                         o.getEvent(), o.getBookie(), o.getRating(), o.getBackOdd(),
                         o.getLayOdd(), o.getSelection(), o.getCompetition(),
-                        o.getUpdate_time(), o.getCountry(), o.getTimeInMin().toString(), fechaFormateada));
+                        o.getUpdate_time(), o.getCountry(), o.getTimeInMin().toString(), fechaFormateada, String.valueOf(o.getIdOdd()), o.getsFechaPartido()));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -445,9 +484,11 @@ public class BotAlertas {
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while ((line = br.readLine()) != null) {
+            	Odd o = new Odd();
                 String[] campos = line.split(";");
+               
                 if (campos.length >= 10) {
-                    Odd o = new Odd();
+                   
                     o.setEvent(campos[0]);
                     o.setBookie(campos[1]);
                     o.setRating(campos[2]);
@@ -460,8 +501,23 @@ public class BotAlertas {
                     o.setTimeInMin(Integer.valueOf(campos[9]));
                     LocalDateTime fecha = LocalDateTime.parse(campos[10], formatter);
                     o.setFechaAlerta(fecha);
-                    lista.add(o);
+                   
                 }
+                if (campos.length >= 11) {
+                	o.setIdOdd(Long.valueOf(campos[11]));
+                }
+                if (campos.length >= 12) {
+                	o.setsFechaPartido(campos[12]);
+                	DateTimeFormatter formatterSalida = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                	
+                	LocalDateTime fecha=LocalDateTime.parse(o.getsFechaPartido(), formatterSalida);
+                	o.setFechaPartido(fecha);
+                	              	
+                	
+                	
+                }
+                
+                lista.add(o);
             }
         } catch (IOException e) {
             e.printStackTrace();
