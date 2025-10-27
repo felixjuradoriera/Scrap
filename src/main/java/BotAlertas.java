@@ -304,6 +304,7 @@ public class BotAlertas {
 	        mensajeDebug.append("Eventos Iniciales: <b>").append(TelegramSender.eventosIniciales).append("</b>\n");
 	        mensajeDebug.append("Eventos Finales: <b>").append(TelegramSender.eventosFinales).append("</b>\n");
 	        mensajeDebug.append("Eventos Alertas enviadas: <b>").append(TelegramSender.alertasEnviadas).append("</b>\n");
+	        mensajeDebug.append("Alertas fallidas: <b>").append(TelegramSender.response400Telegram).append("</b>\n");
 	      
 	       TelegramSender.sendTelegramMessageDebug(mensajeDebug.toString());
         	
