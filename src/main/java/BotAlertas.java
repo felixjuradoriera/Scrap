@@ -154,16 +154,7 @@ public class BotAlertas {
                 
                 //añadimos al array HIST alertas
                 for (Odd oddAnteriorHist : oddsAnterioresHist) {
-                	boolean existe=false;
-                	for (Odd oddNuevo : odds) {
-                		if (oddNuevo.getEvent().equals(oddAnteriorHist.getEvent())
-                                && oddNuevo.getBookie().equals(oddAnteriorHist.getBookie())
-                                && oddNuevo.getSelection().equals(oddAnteriorHist.getSelection())) {
-                			existe=true;
-                		}
-                	}
-    				
-                	if(!existe) {
+                     
                 		// no existe. COmprobamos ultimo filtro de 18 minutos para saber si hay que añadirlo al CSV o no
                 		LocalDateTime ahora = LocalDateTime.now();
                 		LocalDateTime fechaPartido = oddAnteriorHist.getFechaPartido();
@@ -174,7 +165,7 @@ public class BotAlertas {
                             oddsGrabarCSVHist.add(oddAnteriorHist);
                         }
                 		
-                	}
+                	
     			}
                 
                 
