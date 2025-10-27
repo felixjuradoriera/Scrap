@@ -24,6 +24,7 @@ import utils.AlertaExclusionCSVUtils;
 import utils.AlertasFactory;
 import utils.ConfAlertasCSVUtils;
 import utils.OddUtils;
+import utils.OddsCSVUtils;
 import utils.UsersUtils;
 
 public class BotAlertas {
@@ -87,8 +88,8 @@ public class BotAlertas {
                  }
                     
                 // 🔹 Leer histórico si existe
-                ArrayList<Odd> oddsAnteriores = leerCSV(Configuracion.CSV_FILE);
-                ArrayList<Odd> oddsAnterioresHist = leerCSV(Configuracion.CSV_FILE_HIST);
+                ArrayList<Odd> oddsAnteriores = OddsCSVUtils.leerCSV(Configuracion.CSV_FILE);
+                ArrayList<Odd> oddsAnterioresHist = OddsCSVUtils.leerCSV(Configuracion.CSV_FILE_HIST);
                 ArrayList<Odd> oddsGrabarCSV=new ArrayList<Odd>();
                 ArrayList<Odd> oddsGrabarCSVHist=new ArrayList<Odd>();
                            
@@ -313,9 +314,9 @@ public class BotAlertas {
                 // 🔹 Guardar los odds actuales como histórico
     			
     			oddsGrabarCSV.sort(Comparator.comparing(Odd::getFechaPartido, Comparator.nullsLast(Comparator.naturalOrder())));
-                escribirCSV(Configuracion.CSV_FILE, oddsGrabarCSV);
+    			OddsCSVUtils.escribirCSV(Configuracion.CSV_FILE, oddsGrabarCSV);
                 oddsGrabarCSVHist.sort(Comparator.comparing(Odd::getFechaPartido, Comparator.nullsLast(Comparator.naturalOrder())));
-                escribirCSV(Configuracion.CSV_FILE_HIST, oddsGrabarCSVHist);
+                OddsCSVUtils.escribirCSV(Configuracion.CSV_FILE_HIST, oddsGrabarCSVHist);
                 
                 //borrar exclusiones de alertas cuyos eventos ya han pasado
                 List<AlertaExclusion> exclusionesFiltradas=AlertaExclusionCSVUtils.filtrarAlertasPosteriores(exclusiones);
@@ -445,77 +446,7 @@ public class BotAlertas {
         return false;
     }
 
-    // 🔹 Guardar odds en CSV
-    private static void escribirCSV(String file, ArrayList<Odd> odds) {
-    	
-    	 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-    	 
-    	
-        try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
-            for (Odd o : odds) {
-            	String fechaFormateada = o.getFechaAlerta().format(formatter);
-                pw.println(String.join(";",
-                        o.getEvent(), o.getBookie(), o.getRating(), o.getBackOdd(),
-                        o.getLayOdd(), o.getSelection(), o.getCompetition(),
-                        o.getUpdate_time(), o.getCountry(), o.getTimeInMin().toString(), fechaFormateada, String.valueOf(o.getIdOdd()), o.getsFechaPartido()));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // 🔹 Leer odds desde CSV
-    private static ArrayList<Odd> leerCSV(String file) {
-        ArrayList<Odd> lista = new ArrayList<>();
-        File f = new File(file);
-        if (!f.exists()) return lista;
-        
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-            	Odd o = new Odd();
-                String[] campos = line.split(";");
-               
-                if (campos.length >= 10) {
-                   
-                    o.setEvent(campos[0]);
-                    o.setBookie(campos[1]);
-                    o.setRating(campos[2]);
-                    o.setBackOdd(campos[3]);
-                    o.setLayOdd(campos[4]);
-                    o.setSelection(campos[5]);
-                    o.setCompetition(campos[6]);
-                    o.setUpdate_time(campos[7]);
-                    o.setCountry(campos[8]);
-                    o.setTimeInMin(Integer.valueOf(campos[9]));
-                    LocalDateTime fecha = LocalDateTime.parse(campos[10], formatter);
-                    o.setFechaAlerta(fecha);
-                   
-                }
-                if (campos.length >= 11) {
-                	o.setIdOdd(Long.valueOf(campos[11]));
-                }
-                if (campos.length >= 12) {
-                	o.setsFechaPartido(campos[12]);
-                	DateTimeFormatter formatterSalida = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                	
-                	LocalDateTime fecha=LocalDateTime.parse(o.getsFechaPartido(), formatterSalida);
-                	o.setFechaPartido(fecha);
-                	              	
-                	
-                	
-                }
-                
-                lista.add(o);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return lista;
-    }
-
+   
     
       
 
