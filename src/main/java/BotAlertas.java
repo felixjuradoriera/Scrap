@@ -203,6 +203,7 @@ public class BotAlertas {
     					o.setTimeInMin(odd.getTimeInMin());
     					o.setUpdate_time(odd.getUpdate_time());
     					o.setMarket_id(odd.getMarket_id());
+    					o.setIdOdd(odd.getIdOdd());
     					
     					odd2.getOddsFusion().add(o);
     					encontrado=true;
@@ -222,6 +223,7 @@ public class BotAlertas {
     				o.setTimeInMin(odd.getTimeInMin());
     				o.setUpdate_time(odd.getUpdate_time());
     				o.setMarket_id(odd.getMarket_id());
+    				o.setIdOdd(odd.getIdOdd());
     				
     				ArrayList<Odd> oddsFusion=new ArrayList<Odd>();
     				oddsFusion.add(o);
