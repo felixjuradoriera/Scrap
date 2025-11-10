@@ -77,7 +77,47 @@ public class BotAlertas {
 
         try {
         		
-            	ArrayList<Odd> lectura = new ArrayList<>();
+        	 // 🔹 Leer histórico si existe
+            ArrayList<Odd> oddsAnteriores = OddsCSVUtils.leerCSV(Configuracion.CSV_FILE);
+            ArrayList<Odd> oddsAnterioresHist = OddsCSVUtils.leerCSV(Configuracion.CSV_FILE_HIST);
+            ArrayList<Odd> oddsGrabarCSV=new ArrayList<Odd>();
+            ArrayList<Odd> oddsGrabarCSVHist=new ArrayList<Odd>();	
+        	
+        		//AÑADIDO ALERTAS BUEN RATING MOVER DINERO
+        		String urlParametersMover= Configuracion.urlMover;
+        		ArrayList<Odd> lecturaMover = new ArrayList<>();
+        		lecturaMover=NinjaService.mapearListaResultadosData(urlParametersMover, Configuracion.urlData, true);
+        		
+        		if(lecturaMover!=null && lecturaMover.size()>0) {
+        			
+        			for (Odd odd : lecturaMover) {
+        				
+        				 if (!yaExistia(odd, oddsAnteriores) && odd.getTimeInMin()<=Configuracion.FiltroMinutosAntiguedad  && pasaFiltroDatosMover(odd)) {
+        					 LocalDateTime ahora=LocalDateTime.now();
+                    		 odd.setFechaAlerta(ahora);
+                    		 if(odd.getIdOdd()==null || odd.getIdOdd()==0) {
+                    			 odd.setIdOdd(OddUtils.dameIdOdd());	 
+                    		 }
+                    		 
+                    		 oddsGrabarCSV.add(odd);
+                    		 oddsGrabarCSVHist.add(odd);
+                    		 
+                    		 StringBuilder mensaje = AlertasFactory.createAlertaMover(odd);
+     						System.out.println("Alerta Mover enviada");
+     						// 🔹 Enviar a Telegram
+     						TelegramSender.sendTelegramMessageAlertaMover(mensaje.toString(), odd, "403482161");	
+                    		 
+        				 }
+        				
+        				
+        				
+						
+					}
+        			
+        		}
+        	
+        	
+        		ArrayList<Odd> lectura = new ArrayList<>();
                 ArrayList<Odd> odds = new ArrayList<>();
                 
                 String urlParameters=NinjaService.crearUrlFiltroPeticionData(Configuracion.uid, Configuracion.filtroBookies2UP, Configuracion.ratingInicial, Configuracion.cuotaMinima, Configuracion.filtroApuestas2UP, "");
@@ -87,11 +127,7 @@ public class BotAlertas {
                 	System.exit(0);
                  }
                     
-                // 🔹 Leer histórico si existe
-                ArrayList<Odd> oddsAnteriores = OddsCSVUtils.leerCSV(Configuracion.CSV_FILE);
-                ArrayList<Odd> oddsAnterioresHist = OddsCSVUtils.leerCSV(Configuracion.CSV_FILE_HIST);
-                ArrayList<Odd> oddsGrabarCSV=new ArrayList<Odd>();
-                ArrayList<Odd> oddsGrabarCSVHist=new ArrayList<Odd>();
+               
                            
     			
                               
@@ -351,6 +387,39 @@ public class BotAlertas {
     
     
 
+    private static boolean pasaFiltroDatosMover(Odd odd) {
+    	
+    	
+    	//filtro Paises
+    	ArrayList<String> filtroPaises=new ArrayList<String>();
+
+    	   	
+    	if(filtroPaises.contains(odd.getCountry())) {
+    		System.out.println("Evento no pasa filtro pais --> " + odd.getCountry());
+    		return false;
+    	}    	
+    	
+    	
+    	Double rating=Double.valueOf(odd.getRating());
+    	Double cuota=Double.valueOf(odd.getBackOdd());
+    	
+     	
+    	//filtro partido demasiado lejano
+    	LocalDateTime ahora = LocalDateTime.now();
+    	LocalDateTime fechaObjetivo=odd.getFechaPartido();
+    	long diferencia = ChronoUnit.DAYS.between(ahora, fechaObjetivo);
+
+        if (Math.abs(diferencia) <= 5) {
+            System.out.println("✅ La fecha está dentro de ±5 días de hoy");
+        } else {
+            System.out.println("❌ La fecha está fuera del rango de ±5 días");
+            return false;
+        } 
+    	
+    	    	
+    	return true;
+    }
+    
     
     private static boolean pasaFiltroDatos(Odd odd) {
     	
