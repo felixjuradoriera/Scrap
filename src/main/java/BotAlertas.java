@@ -128,12 +128,18 @@ public class BotAlertas {
                 
                Path path = Path.of(Configuracion.CONF_VILI);
                List<String> lineas = Files.readAllLines(path);
-            
+               System.out.println("-------> VILIBETS CONF <-----------");
+               for (String string : lineas) {
+            	   System.out.println(string);
+               }
+               System.out.println(Configuracion.urlDataVilibets);
+                           
                List<String> bookies = new ArrayList<>(List.of(lineas.get(0).split(";")));
                List<String> ligas = new ArrayList<>(List.of(lineas.get(1).split(";")));
 				            
 			   ArrayList<Odd> lecturaVili = new ArrayList<>();
 			   ArrayList<Odd> oddsVili = new ArrayList<>();
+			   
 			   try {
 					lecturaVili=ViliBetsService.mapearListaResultadosData(bookies,ligas, Configuracion.urlDataVilibets, true);
 				} catch (JsonMappingException e) {
