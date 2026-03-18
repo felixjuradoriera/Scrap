@@ -1,7 +1,11 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.PrintWriter;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -9,14 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
 import conf.Configuracion;
 import dto.AlertaExclusion;
 import dto.ConfAlerta;
 import dto.Odd;
 import dto.User;
+import dto.ViliOdd;
 import service.NinjaService;
 import service.ViliBetsService;
 import telegram.TelegramSender;
@@ -27,7 +29,7 @@ import utils.OddUtils;
 import utils.OddsCSVUtils;
 import utils.UsersUtils;
 
-public class BotAlertas {
+public class BotAlertas2 {
 
     // 🔹 Configuración
 	public static Integer codeRespuesta = 0;
@@ -43,8 +45,9 @@ public class BotAlertas {
     	HashMap<Long, ConfAlerta> confAlertas=new HashMap<>();
     	
     	
+    	
     	try {
- 			exclusiones=AlertaExclusionCSVUtils.loadFromCSV();
+			exclusiones=AlertaExclusionCSVUtils.loadFromCSV();
 			confAlertas=ConfAlertasCSVUtils.loadFromCSV();
 			
 			if(!confAlertas.isEmpty()) {
@@ -82,92 +85,30 @@ public class BotAlertas {
             ArrayList<Odd> oddsGrabarCSV=new ArrayList<Odd>();
             ArrayList<Odd> oddsGrabarCSVHist=new ArrayList<Odd>();	
         	
-//        		//AÑADIDO ALERTAS BUEN RATING MOVER DINERO
-//        		String urlParametersMover= Configuracion.urlMover;
-//        		ArrayList<Odd> lecturaMover = new ArrayList<>();
-//        		lecturaMover=NinjaService.mapearListaResultadosData(urlParametersMover, Configuracion.urlData, true);
-//        		
-//        		if(lecturaMover!=null && lecturaMover.size()>0) {
-//        			
-//        			for (Odd odd : lecturaMover) {
-//        				
-//        				 if (!yaExistia(odd, oddsAnteriores) && odd.getTimeInMin()<=Configuracion.FiltroMinutosAntiguedad  && pasaFiltroDatosMover(odd)) {
-//        					 LocalDateTime ahora=LocalDateTime.now();
-//                    		 odd.setFechaAlerta(ahora);
-//                    		 if(odd.getIdOdd()==null || odd.getIdOdd()==0) {
-//                    			 odd.setIdOdd(OddUtils.dameIdOdd());	 
-//                    		 }
-//                    		 
-//                    		 oddsGrabarCSV.add(odd);
-//                    		 oddsGrabarCSVHist.add(odd);
-//                    		 
-//                    		 StringBuilder mensaje = AlertasFactory.createAlertaMover(odd);
-//     						System.out.println("Alerta Mover enviada");
-//     						// 🔹 Enviar a Telegram
-//     						TelegramSender.sendTelegramMessageAlertaMover(mensaje.toString(), odd, "403482161");	
-//                    		 
-//        				 }
-//        				
-//        				
-//        				
-//						
-//					}
-//        			
-//        		}
-        	
-        	
-        		ArrayList<Odd> lectura = new ArrayList<>();
-                ArrayList<Odd> odds = new ArrayList<>();
+               	
+        		ArrayList<ViliOdd> lecturaVili = new ArrayList<>();
+                ArrayList<ViliOdd> oddsVili = new ArrayList<>();
                 
-                /////////// NINJABET  ///////////////////
-                String urlParameters=NinjaService.crearUrlFiltroPeticionData(Configuracion.uid, Configuracion.filtroBookies2UP, Configuracion.ratingInicial, Configuracion.cuotaMinima, Configuracion.filtroApuestas2UP, "");
-                lectura=NinjaService.mapearListaResultadosData(urlParameters, Configuracion.urlData, true);
+                //String urlParameters=NinjaService.crearUrlFiltroPeticionData(Configuracion.uid, Configuracion.filtroBookies2UP, Configuracion.ratingInicial, Configuracion.cuotaMinima, Configuracion.filtroApuestas2UP, "");
+                //lecturaVili=ViliBetsService.mapearListaResultadosData("", Configuracion.urlDataVilibets, true);
                 
-                
-				////////////////VILIBETS ///////////////////
-                
-               Path path = Path.of(Configuracion.CONF_VILI);
-               List<String> lineas = Files.readAllLines(path);
-            
-               List<String> bookies = new ArrayList<>(List.of(lineas.get(0).split(";")));
-               List<String> ligas = new ArrayList<>(List.of(lineas.get(1).split(";")));
-				            
-			   ArrayList<Odd> lecturaVili = new ArrayList<>();
-			   ArrayList<Odd> oddsVili = new ArrayList<>();
-			   try {
-					lecturaVili=ViliBetsService.mapearListaResultadosData(bookies,ligas, Configuracion.urlDataVilibets, true);
-				} catch (JsonMappingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (JsonProcessingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				
-			   //////// FUSION RESULTADOS  ////////////			   
-			   if(!lecturaVili.isEmpty()) {
-					lectura.addAll(lecturaVili);
-				}
-                
-                if(lectura==null) {
+                if(lecturaVili==null) {
                 	System.exit(0);
                  }
                     
-                                             
+                ArrayList<Odd> odds = new ArrayList<>();
+                ArrayList<Odd> lectura = new ArrayList<>();            
                 //filtramos eventos que no interesan
                 for (Odd odd : lectura) {
                 	 if (!yaExistia(odd, oddsAnteriores) && odd.getTimeInMin()<=Configuracion.FiltroMinutosAntiguedad  && pasaFiltroDatos(odd)) {
                 		 
                 		 //buscamos los mejores home,away y draw para cono información complementaria
                 		 
-                		 if(odd.getTipoOdd().equals("N")) {
-	                		 if("1".equals(odd.getSelectionId())) {
-	                			odd=NinjaService.rellenaCuotasSoloHome(odd);	 
-	                		 } else if ("2".equals(odd.getSelectionId())) {
-	                			odd=NinjaService.rellenaCuotasSoloAway(odd);
-	                		 }
-                		 }
+                		 if("1".equals(odd.getSelectionId())) {
+                			odd=NinjaService.rellenaCuotasSoloHome(odd);	 
+                		 } else if ("2".equals(odd.getSelectionId())) {
+                			odd=NinjaService.rellenaCuotasSoloAway(odd);
+                		 } 
                 		 
                 		 LocalDateTime ahora=LocalDateTime.now();
                 		 odd.setFechaAlerta(ahora);
@@ -267,18 +208,6 @@ public class BotAlertas {
     					o.setMarket_id(odd.getMarket_id());
     					o.setIdOdd(odd.getIdOdd());
     					
-    					//VILIBETS
-    					o.setBookie1(odd.getBookie1());
-    					o.setBookie2(odd.getBookie2());
-    					o.setBookie3(odd.getBookie3());
-    					o.setOdd1(odd.getOdd1());
-    					o.setOdd2(odd.getOdd2());
-    					o.setOdd3(odd.getOdd3());
-    					o.setSelection1(odd.getSelection1());
-    					o.setSelection2(odd.getSelection2());
-    					o.setSelection2(odd.getSelection2());
-    					o.setTipoOdd(odd.getTipoOdd());
-    					
     					odd2.getOddsFusion().add(o);
     					encontrado=true;
     				}
@@ -298,18 +227,6 @@ public class BotAlertas {
     				o.setUpdate_time(odd.getUpdate_time());
     				o.setMarket_id(odd.getMarket_id());
     				o.setIdOdd(odd.getIdOdd());
-    				
-    				//VILIBETS
-					o.setBookie1(odd.getBookie1());
-					o.setBookie2(odd.getBookie2());
-					o.setBookie3(odd.getBookie3());
-					o.setOdd1(odd.getOdd1());
-					o.setOdd2(odd.getOdd2());
-					o.setOdd3(odd.getOdd3());
-					o.setSelection1(odd.getSelection1());
-					o.setSelection2(odd.getSelection2());
-					o.setSelection2(odd.getSelection2());
-					o.setTipoOdd(odd.getTipoOdd());
     				
     				ArrayList<Odd> oddsFusion=new ArrayList<Odd>();
     				oddsFusion.add(o);
@@ -352,33 +269,30 @@ public class BotAlertas {
     					if(!marketsExcluidos.contains(odd.getMarket_id())) {
     						
     						boolean enviar=true;
+    						Double cuotaBack=Double.valueOf(odd.getBackOdd());
+    						Double rating=Double.valueOf(odd.getRating());
     						
-    						if(odd.getTipoOdd().equals("N")) {
-	    						Double cuotaBack=Double.valueOf(odd.getBackOdd());
-	    						Double rating=Double.valueOf(odd.getRating());
-	    						
-	    						if(cuotaBack<5) {
-	    							if(rating<confAlerta.getRatioNivel1()) {
-	    								enviar=false;
-	    								System.out.println("ratio nivel1 NO pasa configuración ratio usuario cuota:"+ cuotaBack + " rating:" + rating + " ratingUsuario:" + confAlerta.getRatioNivel1()); 
-	    							} else {
-	    								System.out.println("ratio nivel1 SI pasa configuración ratio usuario cuota:"+ cuotaBack + " rating:" + rating + " ratingUsuario:" + confAlerta.getRatioNivel1());
-	    							}
-	    						} else {
-	    							if(rating<confAlerta.getRatioNivel2()) {
-	    								enviar=false;
-	    								System.out.println("ratio nivel2 NO pasa configuración ratio usuario cuota:"+ cuotaBack + " rating:" + rating + " ratingUsuario:" + confAlerta.getRatioNivel2()); 
-	    							} else {
-	    								System.out.println("ratio nivel2 SI pasa configuración ratio usuario cuota:"+ cuotaBack + " rating:" + rating + " ratingUsuario:" + confAlerta.getRatioNivel2());
-	    							}
-	    						}
-	    						
-	    						if(cuotaBack<confAlerta.getCuotaMinima()) {
-	    							enviar=false;
-	    							System.out.println("cuota NO pasa cuotaMinima usuario -->   cuota:"+ cuotaBack +  "cuotaMinimaUsuario;" + confAlerta.getCuotaMinima());
-	    						} else {
-	    							System.out.println("cuota SI pasa cuotaMinima usuario -->   cuota:"+ cuotaBack +  "cuotaMinimaUsuario;" + confAlerta.getCuotaMinima());
-	    						}
+    						if(cuotaBack<5) {
+    							if(rating<confAlerta.getRatioNivel1()) {
+    								enviar=false;
+    								System.out.println("ratio nivel1 NO pasa configuración ratio usuario cuota:"+ cuotaBack + " rating:" + rating + " ratingUsuario:" + confAlerta.getRatioNivel1()); 
+    							} else {
+    								System.out.println("ratio nivel1 SI pasa configuración ratio usuario cuota:"+ cuotaBack + " rating:" + rating + " ratingUsuario:" + confAlerta.getRatioNivel1());
+    							}
+    						} else {
+    							if(rating<confAlerta.getRatioNivel2()) {
+    								enviar=false;
+    								System.out.println("ratio nivel2 NO pasa configuración ratio usuario cuota:"+ cuotaBack + " rating:" + rating + " ratingUsuario:" + confAlerta.getRatioNivel2()); 
+    							} else {
+    								System.out.println("ratio nivel2 SI pasa configuración ratio usuario cuota:"+ cuotaBack + " rating:" + rating + " ratingUsuario:" + confAlerta.getRatioNivel2());
+    							}
+    						}
+    						
+    						if(cuotaBack<confAlerta.getCuotaMinima()) {
+    							enviar=false;
+    							System.out.println("cuota NO pasa cuotaMinima usuario -->   cuota:"+ cuotaBack +  "cuotaMinimaUsuario;" + confAlerta.getCuotaMinima());
+    						} else {
+    							System.out.println("cuota SI pasa cuotaMinima usuario -->   cuota:"+ cuotaBack +  "cuotaMinimaUsuario;" + confAlerta.getCuotaMinima());
     						}
     						
     						if (enviar) {
@@ -412,21 +326,6 @@ public class BotAlertas {
                 //borrar exclusiones de alertas cuyos eventos ya han pasado
                 List<AlertaExclusion> exclusionesFiltradas=AlertaExclusionCSVUtils.filtrarAlertasPosteriores(exclusiones);
                 AlertaExclusionCSVUtils.escribirAlertasEnCsv(exclusionesFiltradas);
-                
-                
-                
-                
-                
-               
-                
-                
-                
-                
-                
-                
-                
-                
-                
         	
         } catch (Exception e) {
             e.printStackTrace();
@@ -491,7 +390,7 @@ public class BotAlertas {
     
     private static boolean pasaFiltroDatos(Odd odd) {
     	
-    	if(odd.getTipoOdd().equals("N")) {
+    	
     	//filtro Paises
     	ArrayList<String> filtroPaises=new ArrayList<String>();
     	filtroPaises.add("Argentina");
@@ -540,7 +439,7 @@ public class BotAlertas {
 //    	}
     	    	
     	
-    	} 	
+    	    	
     	
     	//filtro partido demasiado lejano
     	LocalDateTime ahora = LocalDateTime.now();

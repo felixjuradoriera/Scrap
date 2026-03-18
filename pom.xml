@@ -14,6 +14,12 @@
 </dependency>
 
 <dependency>
+  <groupId>com.squareup.okhttp3</groupId>
+  <artifactId>okhttp</artifactId>
+  <version>4.12.0</version>
+</dependency>
+
+<dependency>
    <groupId>Comunes</groupId>
 	<artifactId>Comunes</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
