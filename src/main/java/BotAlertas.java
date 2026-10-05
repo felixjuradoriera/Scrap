@@ -120,12 +120,11 @@ public class BotAlertas {
                 ArrayList<Odd> odds = new ArrayList<>();
                 
                 /////////// NINJABET  ///////////////////
-                String urlParameters=NinjaService.crearUrlFiltroPeticionData(Configuracion.uid, Configuracion.filtroBookies2UP, Configuracion.ratingInicial, Configuracion.cuotaMinima, Configuracion.filtroApuestas2UP, "");
-                lectura=NinjaService.mapearListaResultadosData(urlParameters, Configuracion.urlData, true);
+                //String urlParameters=NinjaService.crearUrlFiltroPeticionData(Configuracion.uid, Configuracion.filtroBookies2UP, Configuracion.ratingInicial, Configuracion.cuotaMinima, Configuracion.filtroApuestas2UP, "");
+                //lectura=NinjaService.mapearListaResultadosData(urlParameters, Configuracion.urlData, true);
                 
                 
 				////////////////VILIBETS ///////////////////
-                
                Path path = Path.of(Configuracion.CONF_VILI);
                List<String> lineas = Files.readAllLines(path);
                System.out.println("-------> VILIBETS CONF <-----------");
