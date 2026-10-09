@@ -29,8 +29,6 @@ import utils.UsersUtils;
 
 public class BotAlertas {
 
-    // 🔹 Configuración
-	public static Integer codeRespuesta = 0;
 	
 		
     public static void main(String[] args) {
@@ -138,7 +136,6 @@ public class BotAlertas {
                List<String> ligas = new ArrayList<>(List.of(lineas.get(2).split(";")));
 				            
 			   ArrayList<Odd> lecturaVili = new ArrayList<>();
-			   ArrayList<Odd> oddsVili = new ArrayList<>();
 			   
 			   try {
 					lecturaVili=ViliBetsService.mapearListaResultadosData(bookies2UP,bookiesExcluidas,ligas, Configuracion.urlDataVilibets, true);
@@ -239,19 +236,6 @@ public class BotAlertas {
                 
                 
                 
-                if(lectura.isEmpty()) {
-                	StringBuilder mensajeDebug = new StringBuilder();
-                    mensajeDebug.append("<b>Debug resultados</b>\n");
-                	mensajeDebug.append("La petición ha resuelto sin resultados.");
-                } else if (odds.isEmpty()) {
-                	StringBuilder mensajeDebug = new StringBuilder();
-                    mensajeDebug.append("<b>Debug resultados</b>\n");
-                	mensajeDebug.append("ningún resultado ha pasado el filtro post proceso");
-                } else {
-                	StringBuilder mensajeDebug = new StringBuilder();
-                    mensajeDebug.append("<b>Debug resultados</b>\n");
-                	mensajeDebug.append("Hay resultados post proceso a mostrar");
-                }
                 
                
                ArrayList<Odd> oddsFusionados=new ArrayList<Odd>();
