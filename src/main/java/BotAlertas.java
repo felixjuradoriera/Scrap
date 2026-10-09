@@ -282,7 +282,7 @@ public class BotAlertas {
     					o.setOdd3(odd.getOdd3());
     					o.setSelection1(odd.getSelection1());
     					o.setSelection2(odd.getSelection2());
-    					o.setSelection2(odd.getSelection2());
+    					o.setSelection3(odd.getSelection3());
     					o.setTipoOdd(odd.getTipoOdd());
     					
     					odd2.getOddsFusion().add(o);
@@ -314,7 +314,7 @@ public class BotAlertas {
 					o.setOdd3(odd.getOdd3());
 					o.setSelection1(odd.getSelection1());
 					o.setSelection2(odd.getSelection2());
-					o.setSelection2(odd.getSelection2());
+					o.setSelection3(odd.getSelection3());
 					o.setTipoOdd(odd.getTipoOdd());
     				
     				ArrayList<Odd> oddsFusion=new ArrayList<Odd>();
