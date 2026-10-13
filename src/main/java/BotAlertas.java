@@ -22,6 +22,7 @@ import service.ViliBetsService;
 import telegram.TelegramSender;
 import utils.AlertaExclusionCSVUtils;
 import utils.AlertasFactory;
+import utils.HealthCheck;
 import utils.ConfAlertasCSVUtils;
 import utils.OddUtils;
 import utils.OddsCSVUtils;
@@ -32,6 +33,9 @@ public class BotAlertas {
 	
 		
     public static void main(String[] args) {
+    	//HealthCheck: la tarea ha comenzado
+    	HealthCheck.pingStart();
+
     	
     	
         	
@@ -117,41 +121,63 @@ public class BotAlertas {
         		ArrayList<Odd> lectura = new ArrayList<>();
                 ArrayList<Odd> odds = new ArrayList<>();
                 
-                /////////// NINJABET  ///////////////////
-                ArrayList<Odd> lecturaNinja = NinjaService.leerOddsNinja();
-                if(lecturaNinja!=null) {
-                	lectura.addAll(lecturaNinja);
-                }
+                /////////// NINJABET (BYPASS temporal) ///////////////////
+                // Llamadas al WS de Ninjabet desactivadas temporalmente.
+                // lecturaNinja queda vacío, ninjaOk forzado a true y sin pings de HealthChecks para Ninja.
+                boolean ninjaOk = true;
+                ArrayList<Odd> lecturaNinja = new ArrayList<Odd>();
+                //try {
+                //	lecturaNinja = NinjaService.leerOddsNinja();
+                //	if(lecturaNinja!=null) {
+                //		lectura.addAll(lecturaNinja);
+                //	} else {
+                //		ninjaOk = false;
+                //	}
+                //} catch (Exception e) {
+                //	e.printStackTrace();
+                //	ninjaOk = false;
+                //}
+                //if(ninjaOk) {
+                	//HealthCheck.pingNinjaOk();
+                //} else {
+                //	System.out.println("Ninjabet ha fallado en esta ejecución");
+                //	HealthCheck.pingNinjaFail();
+                //}
                 
                 
 				////////////////VILIBETS ///////////////////
-               Path path = Path.of(Configuracion.CONF_VILI);
-               List<String> lineas = Files.readAllLines(path);
-               System.out.println("-------> VILIBETS CONF <-----------");
-               for (String string : lineas) {
-            	   System.out.println(string);
-               }
-               System.out.println(Configuracion.urlDataVilibets);
-                           
-               List<String> bookies2UP = new ArrayList<>(List.of(lineas.get(0).split(";")));
-               List<String> bookiesExcluidas = new ArrayList<>(List.of(lineas.get(1).split(";")));
-               List<String> ligas = new ArrayList<>(List.of(lineas.get(2).split(";")));
-				            
 			   ArrayList<Odd> lecturaVili = new ArrayList<>();
-			   
+			   boolean viliOk = true;
 			   try {
-					lecturaVili=ViliBetsService.mapearListaResultadosData(bookies2UP,bookiesExcluidas,ligas, Configuracion.urlDataVilibets, true);
-				} catch (JsonMappingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (JsonProcessingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				
-			   //////// FUSION RESULTADOS  ////////////			   
-			   if(!lecturaVili.isEmpty()) {
+			       Path path = Path.of(Configuracion.CONF_VILI);
+			       List<String> lineas = Files.readAllLines(path);
+			       System.out.println("-------> VILIBETS CONF <-----------");
+			       for (String string : lineas) {
+			    	   System.out.println(string);
+			       }
+			       System.out.println(Configuracion.urlDataVilibets);
+
+			       List<String> bookies2UP = new ArrayList<>(List.of(lineas.get(0).split(";")));
+			       List<String> bookiesExcluidas = new ArrayList<>(List.of(lineas.get(1).split(";")));
+			       List<String> ligas = new ArrayList<>(List.of(lineas.get(2).split(";")));
+
+			       lecturaVili=ViliBetsService.mapearListaResultadosData(bookies2UP,bookiesExcluidas,ligas, Configuracion.urlDataVilibets, true);
+			       if(!ViliBetsService.ultimaPeticionOk) {
+			    	   viliOk = false;
+			       }
+			   } catch (Exception e) {
+			       e.printStackTrace();
+			       viliOk = false;
+			   }
+			   if(viliOk) {
+			       HealthCheck.pingViliOk();
+			   } else {
+			       System.out.println("Vilibets ha fallado en esta ejecución");
+			       HealthCheck.pingViliFail();
+			   }
+
+			   //////// FUSION RESULTADOS  ////////////
+			   if(lecturaVili!=null && !lecturaVili.isEmpty()) {
 					lectura.addAll(lecturaVili);
 				}
                 
@@ -404,6 +430,9 @@ public class BotAlertas {
                 //borrar exclusiones de alertas cuyos eventos ya han pasado
                 List<AlertaExclusion> exclusionesFiltradas=AlertaExclusionCSVUtils.filtrarAlertasPosteriores(exclusiones);
                 AlertaExclusionCSVUtils.escribirAlertasEnCsv(exclusionesFiltradas);
+                
+                //HealthCheck: la tarea ha finalizado correctamente
+                HealthCheck.pingSuccess();
                 
                 
                 
